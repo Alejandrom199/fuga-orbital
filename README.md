@@ -2,6 +2,8 @@
 
 Endless runner: saltá sobre los trenes de un planeta alienígena. Cliente Canvas 2D (TypeScript + Vite) con backend propio (Fastify + Drizzle + Postgres) para cuentas, tienda, niveles, ranking y logros. El juego funciona 100% offline sin cuenta; con cuenta, sincroniza contra el servidor.
 
+**En producción:** [fuga-orbital.netlify.app](https://fuga-orbital.netlify.app) (cliente, Netlify) · `https://fuga-orbital-production.up.railway.app` (servidor, Railway) · Postgres en Supabase.
+
 ## Estructura
 
 ```
@@ -40,7 +42,7 @@ Cliente estático en **Netlify**, servidor persistente en **Railway**, Postgres 
 ### 1. Supabase (base de datos)
 
 1. Crear un proyecto nuevo en [supabase.com](https://supabase.com).
-2. **Settings → Database → Connection string → URI**. Copiar esa URL (conexión directa, puerto 5432). Si el proveedor donde corre el servidor no soporta bien IPv6, usar en su lugar el **Session pooler** (puerto 6543) que aparece en la misma pantalla.
+2. **Settings → Database → Connection string**, tab **"Session pooler"** (no "Direct connection"). La conexión directa resuelve a IPv6 y Railway no tiene salida IPv6 — da `ENETUNREACH` al conectar. El pooler resuelve a IPv4 y funciona sin problema (para dev local cualquiera de las dos sirve, pero usar el pooler desde el arranque evita tener que migrar la URL después).
 3. En `/server`, local: `cp .env.example .env`, pegar esa URL en `DATABASE_URL`, generar `JWT_SECRET`/`COOKIE_SECRET` (por ejemplo `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`, ejecutarlo dos veces para tener dos secretos distintos).
 4. `npm run db:migrate && npm run seed` — aplica las 9 tablas y carga el catálogo inicial (mejoras, cosméticos, 3 niveles, 7 logros). Se corre una sola vez desde tu máquina; Railway no necesita volver a correrlo.
 
@@ -64,9 +66,9 @@ Railway y Netlify se conectan a un repo de GitHub para redeployar automáticamen
    - `JWT_SECRET`, `COOKIE_SECRET` (los generados antes — pueden ser los mismos que usaste local o nuevos, pero no reutilices secretos de desarrollo en producción si ya los compartiste en algún lado)
    - `CLIENT_ORIGIN` — de momento poné cualquier valor placeholder, se actualiza en el paso 5 con la URL real de Netlify
    - `NODE_ENV=production`
-   - `PORT` — no hace falta, Railway inyecta su propio `PORT` y el servidor ya lo respeta (`process.env.PORT ?? 3001`)
+   - `PORT=3001` — **ponelo explícito.** Railway puede auto-asignar un puerto interno (ej. 8080) distinto del que después le decís al dominio público que use; si no coinciden da 502 "Application failed to respond". Fijando `PORT=3001` acá y usando ese mismo número al generar el dominio (paso 5) quedan sincronizados.
 4. Railway detecta Node vía Nixpacks y usa los scripts `build`/`start` de `server/package.json` automáticamente. Si el primer deploy falla por eso, revisar en **Settings → Deploy** que el *Build Command* sea `npm run build` y el *Start Command* `npm start`.
-5. Una vez que el deploy esté verde: **Settings → Networking → Generate Domain**. Esa URL (`https://algo.up.railway.app`) es tu `VITE_API_URL`.
+5. Una vez que el deploy esté verde: **Settings → Networking → Generate Domain**, y cuando pida el puerto poné el mismo `3001` del paso anterior. Esa URL (`https://algo.up.railway.app`) es tu `VITE_API_URL`. Si igual da 502, revisá con `railway logs` en qué puerto quedó escuchando el server realmente y alineá la variable `PORT`.
 
 ### 4. Netlify (cliente)
 
