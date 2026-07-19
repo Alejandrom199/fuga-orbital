@@ -246,6 +246,10 @@ export function crearEscenaJuego(contexto: ContextoJuego): EscenaJuego {
 
   configurarInput(canvas, { onSaltar: saltar, onPausa: alternarPausa });
 
+  // El botón visual de pausa del HUD (imprescindible en móvil, sin teclado
+  // para el atajo P/Esc que ya cubre configurarInput).
+  document.getElementById('btn-pausa')?.addEventListener('click', alternarPausa);
+
   function dibujarJugadorEnPantalla(ctx: CanvasRenderingContext2D): void {
     const player = mundo.player;
     const sx = player.worldX - mundo.cameraX;

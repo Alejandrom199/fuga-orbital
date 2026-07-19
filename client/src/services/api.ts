@@ -103,6 +103,41 @@ export function migrarPerfilLocal(datos: DatosMigracionPerfil): Promise<Resultad
   return peticion<{ ok: boolean }>('/perfil/migrar', { method: 'POST', body: JSON.stringify(datos) });
 }
 
+// ---------- Tienda ----------
+
+/** `codigo` coincide 1:1 con los `MejoraId`/`CosmeticoId` del cliente (son
+ * los mismos strings sembrados en `items.codigo` del servidor). */
+export interface ItemTienda {
+  id: number;
+  codigo: string;
+  tipo: 'mejora' | 'cosmetico';
+  nombre: string;
+  descripcion: string;
+  icono: string;
+  costo: number;
+  cantidad: number;
+  equipado: boolean;
+  preparado: boolean;
+}
+
+export function obtenerTienda(): Promise<ResultadoApi<{ monedas: number; items: ItemTienda[] }>> {
+  return peticion('/tienda');
+}
+
+export function comprarItem(
+  itemId: number,
+): Promise<ResultadoApi<{ monedas: number; inventario: { itemId: number; tipo: string; cantidad: number; equipado: boolean } }>> {
+  return peticion('/tienda/comprar', { method: 'POST', body: JSON.stringify({ itemId }) });
+}
+
+export function equiparItem(itemId: number): Promise<ResultadoApi<{ itemId: number; equipado: boolean }>> {
+  return peticion('/tienda/equipar', { method: 'POST', body: JSON.stringify({ itemId }) });
+}
+
+export function prepararItem(itemId: number): Promise<ResultadoApi<{ itemId: number; preparada: boolean }>> {
+  return peticion('/tienda/preparar', { method: 'POST', body: JSON.stringify({ itemId }) });
+}
+
 // ---------- Partidas / ranking ----------
 
 export interface DatosPartida {

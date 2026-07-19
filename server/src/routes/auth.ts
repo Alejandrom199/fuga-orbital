@@ -45,8 +45,12 @@ export default async function authRoutes(fastify: FastifyInstance) {
     reply
       .setCookie(NOMBRE_COOKIE_SESION, token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        // Cliente (Netlify) y servidor (Railway) son dominios distintos: una
+        // cookie cross-site necesita SameSite=None, que a su vez exige
+        // Secure. `localhost` cuenta como contexto seguro para los
+        // navegadores aunque no tenga TLS, así que esto funciona igual en dev.
+        secure: true,
+        sameSite: 'none',
         path: '/',
         signed: true,
         maxAge: MAX_EDAD_COOKIE_S,
@@ -80,8 +84,12 @@ export default async function authRoutes(fastify: FastifyInstance) {
     reply
       .setCookie(NOMBRE_COOKIE_SESION, token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        // Cliente (Netlify) y servidor (Railway) son dominios distintos: una
+        // cookie cross-site necesita SameSite=None, que a su vez exige
+        // Secure. `localhost` cuenta como contexto seguro para los
+        // navegadores aunque no tenga TLS, así que esto funciona igual en dev.
+        secure: true,
+        sameSite: 'none',
         path: '/',
         signed: true,
         maxAge: MAX_EDAD_COOKIE_S,

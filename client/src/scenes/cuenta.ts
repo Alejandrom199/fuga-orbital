@@ -1,5 +1,6 @@
 import { registrarCuenta, iniciarSesion, cerrarSesion, migrarPerfilLocal } from '../services/api';
 import type { DatosMigracionPerfil } from '../services/api';
+import { sincronizarPerfilDesdeServidor } from '../services/sincronizacion';
 import { mostrarPantalla } from '../ui/pantallas';
 import type { ContextoJuego } from '../core/contexto';
 
@@ -86,7 +87,16 @@ export function crearPantallaCuenta(contexto: ContextoJuego, onCerrar: () => voi
 
     sesion.usuario = resultado.datos;
     passwordInput.value = '';
-    if (modo === 'registro') migrarPerfilSiAplica();
+    if (modo === 'registro') {
+      // Cuenta nueva: el servidor arranca en 0. Hasta que exista el endpoint
+      // de migración (ver comentario en services/api.ts), el perfil local
+      // sigue siendo la fuente de verdad — sincronizar acá pisaría el
+      // progreso local con el 0 del servidor, así que no se hace.
+      migrarPerfilSiAplica();
+    } else {
+      // Cuenta existente: el servidor sí es la fuente de verdad.
+      void sincronizarPerfilDesdeServidor(contexto);
+    }
     actualizarVista();
   });
 

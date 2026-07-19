@@ -4,6 +4,7 @@ import { iniciarLoop } from './core/loop';
 import { crearEscenaMenu } from './scenes/menu';
 import { crearEscenaJuego } from './scenes/juego';
 import { cargarPerfil, cargarMejorPuntuacion } from './services/storage';
+import { sincronizarPerfilDesdeServidor } from './services/sincronizacion';
 import { obtenerSesionActual } from './services/api';
 import { PRESET_ENDLESS } from './data/config';
 import type { ContextoJuego } from './core/contexto';
@@ -59,7 +60,11 @@ gestor.cambiar('menu');
 // arranque ni el primer frame; si no hay backend o no hay cookie válida,
 // `contexto.sesion.usuario` simplemente queda en null (modo offline).
 void obtenerSesionActual().then((resultado) => {
-  if (resultado.ok) contexto.sesion.usuario = resultado.datos;
+  if (!resultado.ok) return;
+  contexto.sesion.usuario = resultado.datos;
+  // Con sesión ya activa al recargar la página, trae monedas/inventario
+  // reales del servidor antes de que el jugador llegue a la tienda o a jugar.
+  void sincronizarPerfilDesdeServidor(contexto);
 });
 
 // ---------- Orientación (aviso de girar el móvil) ----------
