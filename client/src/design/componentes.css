@@ -519,6 +519,159 @@
 }
 
 /* ============================================================
+ * Tarjeta de logro (Fase 6)
+ * Uso: pantalla-logros — una fila por logro dentro de .tienda-lista.
+ * Icono, nombre, descripción, barra de progreso simple si el logro es
+ * acumulativo (`progreso` no null), check si `desbloqueada`, opacidad
+ * reducida si sigue bloqueado. Los secretos no desbloqueados llegan ya
+ * ocultos del servidor (nombre '???', icono ❔) — `.secreta` sólo atenúa un
+ * poco más el texto, no hay lógica de ocultamiento en el cliente.
+ * <div class="tarjeta-logro"><div class="tarjeta-logro-icono">🏆</div>...
+ * ============================================================ */
+.tarjeta-logro {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--borde-neon-suave);
+  border-radius: 14px;
+  padding: 10px var(--espacio-4);
+  text-align: left;
+  opacity: 0.6;
+}
+
+.tarjeta-logro.desbloqueada {
+  opacity: 1;
+  border-color: rgba(255, 226, 124, 0.4);
+  background: rgba(255, 226, 124, 0.06);
+}
+
+.tarjeta-logro.secreta {
+  opacity: 0.45;
+}
+
+.tarjeta-logro-icono {
+  font-size: 28px;
+  flex-shrink: 0;
+  width: 36px;
+  text-align: center;
+}
+
+.tarjeta-logro-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.tarjeta-logro-nombre {
+  font-size: var(--texto-xs);
+  font-weight: var(--peso-bold);
+  color: var(--texto-principal);
+}
+
+.tarjeta-logro-desc {
+  font-size: 12px;
+  color: #ab9fc9;
+  margin-top: 1px;
+}
+
+.tarjeta-logro-barra {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.tarjeta-logro-barra-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--neon-cian), var(--oro));
+}
+
+.tarjeta-logro-progreso {
+  font-size: 11px;
+  color: var(--texto-atenuado);
+  margin-top: 2px;
+}
+
+.tarjeta-logro-check {
+  flex-shrink: 0;
+  font-size: 18px;
+  color: var(--oro);
+  text-shadow: 0 0 var(--glow-suave) rgba(255, 210, 100, 0.5);
+}
+
+/* ============================================================
+ * Toast de notificación (Fase 6)
+ * Uso: mostrarToast({icono, texto, tipo}) en ui/toast.ts. Contenedor fijo
+ * #toasts en index.html (esquina superior derecha, `pointer-events:none`,
+ * fuera de cualquier .pantalla para poder mostrarse encima de todas). Cada
+ * toast se apila, entra con una transición simple de opacity/transform
+ * (coherente con `panel-entrada`) y se autocierra a los ~3.5s. Variantes
+ * .toast-logro (default) / .toast-nivel / .toast-error sólo cambian el
+ * acento del borde — nada de animaciones ni librerías.
+ * ============================================================ */
+#toasts {
+  position: fixed;
+  top: var(--espacio-4);
+  right: var(--espacio-4);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+  pointer-events: none;
+  max-width: min(320px, calc(100vw - 2 * var(--espacio-4)));
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  background: var(--fondo-panel-translucido);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid var(--borde-neon-suave);
+  border-radius: var(--radio-control);
+  padding: 10px var(--espacio-3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.toast-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast-icono {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.toast-texto {
+  font-size: var(--texto-xs);
+  color: var(--texto-principal);
+  line-height: 1.3;
+}
+
+.toast-logro {
+  border-color: rgba(255, 226, 124, 0.5);
+}
+
+.toast-nivel {
+  border-color: rgba(124, 247, 255, 0.5);
+}
+
+.toast-error {
+  border-color: rgba(255, 92, 122, 0.5);
+}
+
+.toast-error .toast-texto {
+  color: #ffd2de;
+}
+
+/* ============================================================
  * Resultado de nivel (Fase 5)
  * Uso: pantalla-gameover — texto simple con el resultado del objetivo del
  * nivel (completado/no + estrellas), llega en segundo plano tras el POST

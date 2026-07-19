@@ -62,6 +62,7 @@
           <button id="btn-cuenta" class="boton-icono" aria-label="Cuenta" type="button">👤</button>
           <button id="btn-ranking" class="boton-icono" aria-label="Ranking" type="button">🏆</button>
           <button id="btn-niveles" class="boton-icono" aria-label="Niveles" type="button">🗺️</button>
+          <button id="btn-logros" class="boton-icono" aria-label="Logros" type="button">🏅</button>
         </div>
         <p class="mejoras-listas" id="mejoras-listas"></p>
         <p class="record">Mejor puntuación &middot; <span id="record-inicio">0</span> &middot; 🪙 <span id="saldo-inicio">0</span></p>
@@ -159,7 +160,21 @@
         <button id="btn-cerrar-niveles" class="boton-principal">Volver</button>
       </div>
     </div>
+
+    <div id="pantalla-logros" class="pantalla oculto">
+      <div class="panel panel-tienda">
+        <h2>Logros</h2>
+        <p id="logros-estado" class="motivo oculto"></p>
+        <div id="logros-lista" class="tienda-lista"></div>
+        <button id="btn-cerrar-logros" class="boton-principal">Volver</button>
+      </div>
+    </div>
   </div>
+
+  <!-- Contenedor global de toasts (Fase 6): fuera de #juego para poder
+       mostrarse sobre cualquier pantalla; pointer-events:none como el resto
+       del HUD (los toasts son sólo notificación, no interactivos). -->
+  <div id="toasts" aria-live="polite"></div>
 
   <div id="aviso-rotar">
     <div class="rotar-icono" aria-hidden="true">📱</div>

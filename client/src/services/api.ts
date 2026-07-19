@@ -114,9 +114,20 @@ export interface DatosPartida {
   mejorasUsadas?: Record<string, unknown>;
 }
 
+/** Shape exacto de `LogroDesbloqueado` que arma `server/src/logros.ts`
+ * (`evaluarLogrosPendientes`) y devuelve `POST /partidas`. */
+export interface LogroDesbloqueadoApi {
+  id: number;
+  codigo: string;
+  nombre: string;
+  descripcion: string;
+  icono: string;
+  recompensa: number;
+}
+
 export interface RespuestaPartida {
   partida: { id: number; puntos: number; monedasGanadas: number; duracionS: number };
-  logrosDesbloqueados: unknown[];
+  logrosDesbloqueados: LogroDesbloqueadoApi[];
   nivelCompletado?: { nivelId: number; completado: boolean; estrellas: number };
 }
 
@@ -162,4 +173,30 @@ export interface NivelApi {
  * llamador (`scenes/seleccion-niveles.ts`) decide no invocarla sin sesión. */
 export function obtenerNiveles(): Promise<ResultadoApi<{ niveles: NivelApi[] }>> {
   return peticion<{ niveles: NivelApi[] }>('/niveles');
+}
+
+// ---------- Logros ----------
+
+/** Shape exacto que arma `server/src/routes/logros.ts`: los `secreto` no
+ * desbloqueados ya llegan con `nombre:'???'`, `descripcion` genérica e
+ * `icono:'❔'` — el cliente no necesita lógica especial para ocultarlos.
+ * `recompensa` sólo viene presente cuando el logro no está oculto. */
+export interface LogroApi {
+  id: number;
+  codigo: string;
+  nombre: string;
+  descripcion: string;
+  icono: string;
+  secreto: boolean;
+  recompensa?: number;
+  desbloqueado: boolean;
+  progreso: { actual: number; objetivo: number } | null;
+}
+
+/** Igual que `obtenerNiveles`: requiere sesión para tener sentido (los
+ * logros persisten en el servidor), aunque el endpoint también acepta
+ * llamarse sin cookie (`autenticarOpcional`) — el llamador
+ * (`scenes/logros.ts`) decide no invocarla sin sesión. */
+export function obtenerLogros(): Promise<ResultadoApi<{ logros: LogroApi[] }>> {
+  return peticion<{ logros: LogroApi[] }>('/logros');
 }

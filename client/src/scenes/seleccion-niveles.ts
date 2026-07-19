@@ -2,6 +2,7 @@ import { obtenerNiveles } from '../services/api';
 import type { NivelApi } from '../services/api';
 import { presetDesdeNivel } from '../data/config';
 import { mostrarPantalla } from '../ui/pantallas';
+import { mostrarToast } from '../ui/toast';
 import type { ContextoJuego } from '../core/contexto';
 
 export interface PantallaNiveles {
@@ -49,6 +50,7 @@ export function crearPantallaNiveles(contexto: ContextoJuego, onCerrar: () => vo
 
     if (!resultado.ok) {
       estadoEl.textContent = 'No se pudieron cargar los niveles (revisa tu conexión).';
+      mostrarToast({ icono: '⚠️', texto: 'Sin conexión con el servidor', tipo: 'error' });
       return;
     }
 

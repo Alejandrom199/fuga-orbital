@@ -17,6 +17,7 @@ import { mostrarPantalla } from '../ui/pantallas';
 import { guardarPerfil, guardarMejorPuntuacion } from '../services/storage';
 import { enviarPartida } from '../services/api';
 import type { DatosPartida } from '../services/api';
+import { mostrarToast } from '../ui/toast';
 import { MEJORAS, BONUS_VIDAS, BONUS_SALTO, VIDAS_BASE } from '../data/config';
 import type { MejoraId, PresetJuego } from '../data/config';
 import { configurarInput } from '../core/input';
@@ -109,9 +110,17 @@ export function crearEscenaJuego(contexto: ContextoJuego): EscenaJuego {
   //
   // Fase 5: si la partida fue de un nivel (`nivelActivo` no nulo) se reporta
   // `modo:'nivel'` + `nivelId` en vez de `modo:'endless'`; el servidor
-  // evalúa el objetivo y devuelve estrellas/completado, que se muestran (en
-  // segundo plano, la pantalla de game-over ya está abierta) con un texto
-  // simple — sin diseño elaborado todavía.
+  // evalúa el objetivo y devuelve estrellas/completado. Fase 6: la misma
+  // respuesta trae `logrosDesbloqueados[]`, evaluado en la misma transacción
+  // que insertó la partida.
+  //
+  // Decisión de diseño (toast vs. texto en game-over): se complementan, no
+  // se reemplaza uno por el otro. `mostrarResultadoNivel` sigue escribiendo
+  // el texto en la pantalla de game-over (detallado, queda visible mientras
+  // esa pantalla lo esté) y AQUÍ se dispara además un toast global — porque
+  // esta respuesta llega en segundo plano y, para cuando lo hace, el
+  // jugador puede ya haber salido de game-over (reintentó o volvió al
+  // menú); el toast es lo único garantizado de verse pase lo que pase.
   function sincronizarPartidaConServidor(total: number): void {
     if (!sesion.usuario) return;
     const datos: DatosPartida =
@@ -132,8 +141,17 @@ export function crearEscenaJuego(contexto: ContextoJuego): EscenaJuego {
             mejorasUsadas: efectosActivos,
           };
     void enviarPartida(datos).then((resultado) => {
-      if (resultado.ok && resultado.datos.nivelCompletado) {
+      if (!resultado.ok) return;
+
+      if (resultado.datos.nivelCompletado) {
         pantallaGameOver.mostrarResultadoNivel(resultado.datos.nivelCompletado);
+        if (resultado.datos.nivelCompletado.completado) {
+          mostrarToast({ icono: '🚀', texto: '¡Nivel completado!', tipo: 'nivel' });
+        }
+      }
+
+      for (const logro of resultado.datos.logrosDesbloqueados) {
+        mostrarToast({ icono: logro.icono, texto: `Logro desbloqueado: ${logro.nombre}`, tipo: 'logro' });
       }
     });
   }
