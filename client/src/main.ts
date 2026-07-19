@@ -150,14 +150,14 @@ btnFullscreen.addEventListener('click', alternarFullscreen);
 // ---------- Bucle principal ----------
 gestor.draw(ctx); // primer frame inmediato (fondo del menú) antes del primer rAF
 
-const barraSuperior = document.getElementById('barra-superior')!;
+const btnPausaHud = document.getElementById('btn-pausa')!;
 
 iniciarLoop((dt) => {
   if (enPortrait) return;
   gestor.update(dt);
   gestor.draw(ctx);
-  // Pausa/pantalla-completa sólo tienen sentido durante una partida (la
-  // propia escena 'juego' cubre jugando/pausa/game-over) — en el menú y sus
-  // pantallas (tienda, niveles, etc.) no deben verse.
-  barraSuperior.classList.toggle('oculto', gestor.nombreActual !== 'juego');
+  // Pausar sólo tiene sentido durante una partida (la propia escena 'juego'
+  // cubre jugando/pausa/game-over); pantalla completa sí tiene sentido en
+  // cualquier pantalla, así que ese botón queda siempre visible.
+  btnPausaHud.classList.toggle('oculto', gestor.nombreActual !== 'juego');
 });
