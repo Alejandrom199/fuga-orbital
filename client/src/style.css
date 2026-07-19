@@ -10,7 +10,7 @@ html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: var(--fondo-espacio);
+  background: var(--fondo);
   font-family: var(--fuente);
   touch-action: none;
 }
@@ -38,8 +38,8 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 18px;
-  background: var(--fondo-espacio);
-  color: var(--texto-principal);
+  background: var(--fondo);
+  color: var(--texto);
   text-align: center;
   padding: var(--espacio-6);
 }
@@ -53,6 +53,10 @@ html, body {
   animation: rotar-girar 1.6s ease-in-out infinite;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .rotar-icono { animation: none; }
+}
+
 @keyframes rotar-girar {
   0%, 100% { transform: rotate(0deg); }
   50% { transform: rotate(90deg); }
@@ -61,10 +65,14 @@ html, body {
 #aviso-rotar p {
   font-size: var(--texto-sm);
   max-width: 320px;
-  color: var(--neon-violeta);
+  color: var(--texto-tenue);
 }
 
-/* Marca (menú principal) */
+/* ============================================================
+ * Menú principal — marca discreta: un planeta simple, tipografía de
+ * sistema, sin degradé de color. El logo es la única forma orgánica de
+ * toda la pantalla; el resto es geometría neutra.
+ * ============================================================ */
 
 .marca {
   display: flex;
@@ -75,12 +83,12 @@ html, body {
 
 .logo-planeta {
   position: relative;
-  width: 58px;
-  height: 58px;
+  width: 52px;
+  height: 52px;
   flex-shrink: 0;
   border-radius: 50%;
-  background: radial-gradient(circle at 34% 30%, #ffedc7, #ffb85e 55%, #a9701c 100%);
-  box-shadow: 0 0 26px rgba(255, 190, 100, 0.55);
+  background: radial-gradient(circle at 34% 30%, #4a4340, #2a2622 70%);
+  border: 1px solid var(--borde-fuerte);
 }
 
 .logo-planeta::after {
@@ -88,73 +96,85 @@ html, body {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 92px;
-  height: 20px;
-  border: 3px solid rgba(255, 214, 158, 0.6);
+  width: 82px;
+  height: 18px;
+  border: 2px solid var(--acento);
+  opacity: 0.55;
   border-radius: 50%;
   transform: translate(-50%, -50%) rotate(-18deg);
 }
 
 .marca-texto h1 {
-  font-size: clamp(26px, 5.5vw, 38px);
-  letter-spacing: 3px;
-  line-height: 1.1;
-  background: linear-gradient(90deg, var(--neon-cian), var(--neon-magenta), var(--oro));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  text-shadow: 0 0 30px rgba(180, 100, 255, 0.35);
+  font-size: clamp(24px, 5vw, 32px);
+  font-weight: var(--peso-bold);
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  color: var(--texto);
 }
 
 .subtitulo {
   margin-top: 4px;
-  color: var(--texto-atenuado);
-  font-size: 13.5px;
+  color: var(--texto-tenue);
+  font-size: var(--texto-xs);
   line-height: 1.4;
 }
 
-.leyenda {
+.record {
+  color: var(--texto-tenue);
+  font-size: var(--texto-xs);
+  font-family: var(--fuente-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.record b {
+  color: var(--acento);
+  font-weight: var(--peso-bold);
+}
+
+.fila-botones-menu {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espacio-3);
+}
+
+.fila-iconos-menu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
   gap: var(--espacio-2);
-  width: 100%;
 }
 
-.leyenda-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px var(--espacio-3);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--borde-neon-suave);
-  font-size: 12.5px;
-  color: var(--neon-violeta);
+.mejoras-listas {
+  font-size: var(--texto-xs);
+  color: var(--acento);
+  min-height: 16px;
 }
 
-.leyenda-item .icono {
-  font-size: 14px;
+.cuenta-estado {
+  font-size: var(--texto-2xs);
+  color: var(--texto-debil);
 }
+
+/* ---------- "Cómo se juega": mismo contenido de siempre, ahora detrás
+   de un botón en vez de ocupar la pantalla principal ---------- */
 
 .controles {
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--espacio-2);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(180, 140, 255, 0.16);
-  border-radius: 14px;
-  padding: 14px 18px;
+  text-align: left;
 }
 
 .control-fila {
   display: flex;
   align-items: center;
   gap: var(--espacio-3);
-  font-size: var(--texto-xs);
-  color: #ded6f4;
-  text-align: left;
+  font-size: var(--texto-sm);
+  color: var(--texto-tenue);
 }
 
 .teclas {
@@ -169,76 +189,42 @@ html, body {
   min-width: 78px;
 }
 
-kbd {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 5px;
-  padding: 2px 7px;
-  font-family: inherit;
-  font-size: 12px;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15) inset;
-}
-
-.record {
-  color: var(--neon-cian);
-  font-size: var(--texto-xs);
-}
-
-.fila-botones-menu {
+.leyenda {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: var(--espacio-3);
-}
-
-/* .boton-icono (definido en design/componentes.css) usado aquí con tamaño de menú */
-#btn-tienda,
-#btn-ajustes,
-#btn-cuenta,
-#btn-ranking,
-#btn-niveles,
-#btn-logros {
-  width: 54px;
-  height: 54px;
-  font-size: 24px;
-}
-
-.mejoras-listas {
-  font-size: 12.5px;
-  color: var(--neon-cian);
-  min-height: 16px;
-}
-
-/* ---------- Tienda ---------- */
-
-.panel-tienda {
-  max-height: 86vh;
-}
-
-.saldo-tienda {
-  font-size: var(--texto-lg);
-  font-weight: var(--peso-bold);
-  color: var(--oro);
-  text-shadow: 0 0 16px rgba(255, 210, 100, 0.4);
-}
-
-.tienda-lista {
+  gap: var(--espacio-2);
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-height: 42vh;
-  overflow-y: auto;
-  padding-right: var(--espacio-1);
+  margin-top: var(--espacio-4);
 }
 
-.tienda-lista.oculto {
-  display: none;
+.leyenda-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px var(--espacio-3);
+  border-radius: 999px;
+  background: var(--fondo-elevado);
+  font-size: var(--texto-2xs);
+  color: var(--texto-tenue);
 }
+
+kbd {
+  background: var(--fondo-elevado);
+  border: 1px solid var(--borde-fuerte);
+  border-radius: 5px;
+  padding: 2px 7px;
+  font-family: var(--fuente-num);
+  font-size: 12px;
+  color: var(--texto);
+}
+
+/* ============================================================
+ * Game over: resumen de la partida (se queda como modal — es una
+ * interrupción breve, no una sección de navegación).
+ * ============================================================ */
 
 .motivo {
-  color: #ff9ecf;
+  color: var(--texto-tenue);
   font-size: var(--texto-sm);
   min-height: 20px;
 }
@@ -247,11 +233,10 @@ kbd {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(180, 140, 255, 0.16);
-  border-radius: 14px;
-  padding: 6px var(--espacio-4);
+  background: var(--fondo);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+  padding: 0 var(--espacio-4);
 }
 
 .resumen-fila {
@@ -260,26 +245,103 @@ kbd {
   align-items: center;
   padding: 10px 0;
   font-size: var(--texto-sm);
-  color: var(--texto-atenuado);
+  color: var(--texto-tenue);
 }
 
 .resumen-fila + .resumen-fila {
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--borde);
 }
 
 .resumen-fila span:last-child {
-  color: var(--oro);
+  color: var(--texto);
   font-weight: var(--peso-bold);
+  font-family: var(--fuente-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.resultado-nivel {
+  font-size: var(--texto-sm);
+  color: var(--acento);
+  font-weight: var(--peso-medio);
+}
+
+/* ============================================================
+ * Formulario de cuenta
+ * ============================================================ */
+
+.cuenta-sesion {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espacio-3);
+  background: var(--fondo-panel);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-panel);
+  padding: var(--espacio-4);
+}
+
+.cuenta-sesion p {
+  font-size: var(--texto-sm);
+  color: var(--texto-tenue);
+}
+
+.form-cuenta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-3);
+  margin-top: var(--espacio-3);
+}
+
+.cuenta-input {
+  font-family: var(--fuente);
+  width: 100%;
+  background: var(--fondo);
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio-control);
+  padding: 12px var(--espacio-3);
   font-size: var(--texto-md);
+  color: var(--texto);
+  min-height: var(--touch-minimo);
+}
+
+.cuenta-input:focus {
+  outline: none;
+  border-color: var(--acento);
+}
+
+.cuenta-input::placeholder {
+  color: var(--texto-debil);
+}
+
+.cuenta-error {
+  color: var(--peligro);
+  font-size: var(--texto-xs);
+}
+
+.cuenta-nota {
+  color: var(--texto-debil);
+  font-size: var(--texto-2xs);
+  margin-top: var(--espacio-2);
+}
+
+@media (max-width: 640px) {
+  .hoja-barra { padding: var(--espacio-3) var(--espacio-4); }
+  .hoja-cuerpo { padding: var(--espacio-4); }
+  .tienda-lista { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
 }
 
 @media (max-width: 480px) {
   .corazon { font-size: 20px; }
   #puntuacion { font-size: 18px; }
-  .panel { padding: 28px 22px; }
+  .panel { padding: var(--espacio-5) var(--espacio-4); max-width: 100%; }
   .marca { gap: var(--espacio-3); }
-  .logo-planeta { width: 46px; height: 46px; }
-  .boton-principal { padding: 12px 34px; font-size: var(--texto-sm); }
-  #btn-tienda, #btn-ajustes, #btn-cuenta, #btn-ranking, #btn-niveles, #btn-logros { width: 46px; height: 46px; font-size: 20px; }
-  .tienda-lista { max-height: 34vh; }
+  .logo-planeta { width: 44px; height: 44px; }
+  .boton-principal { padding: 12px 28px; font-size: var(--texto-sm); }
+  .boton-icono { width: 42px; height: 42px; font-size: 17px; }
+  .tienda-lista { grid-template-columns: 1fr 1fr; gap: var(--espacio-2); }
+  .tienda-item { padding: var(--espacio-3); }
+}
+
+@media (max-width: 360px) {
+  .tienda-lista { grid-template-columns: 1fr; }
 }

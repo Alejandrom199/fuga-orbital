@@ -1,5 +1,6 @@
 const IDS_PANTALLA = [
   'pantalla-inicio',
+  'pantalla-como-jugar',
   'pantalla-pausa',
   'pantalla-gameover',
   'pantalla-tienda',

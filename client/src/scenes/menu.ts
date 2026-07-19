@@ -55,6 +55,14 @@ export function crearEscenaMenu(contexto: ContextoJuego): Escena {
   document.getElementById('btn-niveles')!.addEventListener('click', () => niveles.abrir());
   document.getElementById('btn-logros')!.addEventListener('click', () => logros.abrir());
 
+  // "Cómo se juega": info estática, no amerita un módulo de pantalla propio.
+  document.getElementById('btn-como-jugar')!.addEventListener('click', () => {
+    mostrarPantalla('pantalla-como-jugar');
+  });
+  document.getElementById('btn-cerrar-como-jugar')!.addEventListener('click', () => {
+    mostrarPantalla('pantalla-inicio');
+  });
+
   return {
     enter(): void {
       actualizarInicio();

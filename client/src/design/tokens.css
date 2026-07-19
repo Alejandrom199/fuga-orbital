@@ -1,35 +1,49 @@
-/* Sistema de diseño de Fuga Orbital: espacio profundo con neones.
- * Todo color/espaciado/forma/tipografía de la UI (HTML+CSS) sale de aquí;
- * el arte dibujado en canvas (personaje, enemigos, fondo) no se tokeniza,
- * igual que un sprite no tendría variables CSS. */
+/* Sistema de diseño de Fuga Orbital — UI de la interfaz (menús, tienda,
+ * paneles). El arte del juego en sí (personaje, enemigos, fondo) sigue
+ * siendo el neón espacial del canvas: es identidad del gameplay, no de la
+ * interfaz, y no se toca acá. La interfaz es deliberadamente discreta:
+ * grafito neutro + un único acento dorado, sin competir con el juego. */
 :root {
-  /* Color — fondos */
-  --fondo-espacio: #05010f;
-  --fondo-panel: #100626;
-  --fondo-panel-translucido: rgba(20, 10, 40, 0.55);
+  /* Fondos — grafito neutro, sin tinte de color */
+  --fondo: #0c0e11;
+  --fondo-panel: #15181c;
+  --fondo-elevado: #1c2025;
+  --fondo-hover: #22262c;
+  --borde: #262b31;
+  --borde-fuerte: #383e46;
 
-  /* Color — texto */
-  --texto-principal: #f2ecff;
-  --texto-suave: #eaf6ff;
-  --texto-atenuado: #cabfe8;
+  /* Texto */
+  --texto: #eceef0;
+  --texto-tenue: #9aa0a8;
+  --texto-debil: #656b73;
 
-  /* Color — acentos neón */
-  --neon-cian: #7cf7ff;
-  --neon-magenta: #ff7ce8;
-  --neon-violeta: #dcd2f7;
-  --neon-azul: #7c9bff;
-  --borde-neon: rgba(180, 120, 255, 0.5);
-  --borde-neon-suave: rgba(180, 140, 255, 0.22);
+  /* Acento único: dorado apagado. Se usa con criterio (CTA principal,
+   * saldo de monedas, estados activos) — nunca decorativo ni repetido. */
+  --acento: #c9a961;
+  --acento-fuerte: #ddc07f;
+  --sobre-acento: #17130a;
 
-  /* Color — semánticos */
-  --oro: #ffe27c;
-  --peligro: #ff5c7a;
+  /* Semánticos, igual de discretos que el resto de la paleta */
+  --exito: #6fae82;
+  --exito-fondo: rgba(111, 174, 130, 0.12);
+  --peligro: #cf6b5c;
+  --peligro-fondo: rgba(207, 107, 92, 0.12);
 
-  /* Glow: blur estandarizado en 2 intensidades; el color lo pone cada
-   * elemento (el glow es identidad del juego, pero sólo en elementos
-   * interactivos o de estado, nunca en texto largo). */
-  --glow-suave: 6px;
-  --glow-fuerte: 25px;
+  /* Tipografía — un único stack de sistema ("fuente estándar"), sin
+   * fuente de marca; la jerarquía sale de peso/tamaño/espaciado. */
+  --fuente: -apple-system, "Segoe UI", Roboto, system-ui, Arial, sans-serif;
+  --fuente-num: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+
+  --texto-2xs: 12px;
+  --texto-xs: 13px;
+  --texto-sm: 14.5px;
+  --texto-md: 16px;
+  --texto-lg: 20px;
+  --texto-xl: 25px;
+  --texto-2xl: 32px;
+  --peso-normal: 400;
+  --peso-medio: 500;
+  --peso-bold: 700;
 
   /* Espaciado */
   --espacio-1: 4px;
@@ -38,21 +52,12 @@
   --espacio-4: 16px;
   --espacio-5: 24px;
   --espacio-6: 32px;
+  --espacio-7: 48px;
 
   /* Forma */
   --radio-control: 8px;
-  --radio-panel: 16px;
-
-  /* Tipografía */
-  --fuente: 'Segoe UI', Verdana, Arial, sans-serif;
-  --texto-xs: 13px;
-  --texto-sm: 15px;
-  --texto-md: 17px;
-  --texto-lg: 22px;
-  --texto-xl: 28px;
-  --peso-normal: 400;
-  --peso-bold: 700;
-
-  /* Touch target mínimo recomendado (móvil) */
+  --radio-panel: 14px;
   --touch-minimo: 44px;
+
+  --sombra-panel: 0 20px 50px rgba(0, 0, 0, 0.45);
 }
