@@ -12,6 +12,10 @@ export interface PantallaTienda {
   abrir(): void;
 }
 
+function icono(nombreFa: string): string {
+  return `<i class="fa-solid fa-${nombreFa}" aria-hidden="true"></i>`;
+}
+
 export function crearPantallaTienda(contexto: ContextoJuego, onCerrar: () => void): PantallaTienda {
   const { perfil, sesion } = contexto;
 
@@ -29,10 +33,10 @@ export function crearPantallaTienda(contexto: ContextoJuego, onCerrar: () => voi
     listaMejorasEl.innerHTML = mejoras
       .map((item) => {
         const sinFondos = perfil.monedas < item.costo;
-        const textoPreparar = item.cantidad > 0 ? (item.preparado ? 'Preparada ✓' : 'Preparar') : 'Sin cargas';
+        const textoPreparar = item.cantidad > 0 ? (item.preparado ? `Preparada ${icono('check')}` : 'Preparar') : 'Sin cargas';
         return `
           <div class="tienda-item">
-            <div class="tienda-item-icono">${item.icono}</div>
+            <div class="tienda-item-icono">${icono(item.icono)}</div>
             <div class="tienda-item-info">
               <div class="tienda-item-nombre">${item.nombre}</div>
               <div class="tienda-item-desc">${item.descripcion}</div>
@@ -53,7 +57,7 @@ export function crearPantallaTienda(contexto: ContextoJuego, onCerrar: () => voi
         const textoBtn = !comprado ? `Comprar &middot; ${item.costo}` : item.equipado ? 'Quitar' : 'Equipar';
         return `
           <div class="tienda-item">
-            <div class="tienda-item-icono">${item.icono}</div>
+            <div class="tienda-item-icono">${icono(item.icono)}</div>
             <div class="tienda-item-info">
               <div class="tienda-item-nombre">${item.nombre}</div>
               <div class="tienda-item-desc">${item.descripcion}</div>
@@ -70,10 +74,10 @@ export function crearPantallaTienda(contexto: ContextoJuego, onCerrar: () => voi
         const cantidad = perfil.inventario[id];
         const preparada = perfil.seleccion[id] && cantidad > 0;
         const sinFondos = perfil.monedas < def.costo;
-        const textoPreparar = cantidad > 0 ? (preparada ? 'Preparada ✓' : 'Preparar') : 'Sin cargas';
+        const textoPreparar = cantidad > 0 ? (preparada ? `Preparada ${icono('check')}` : 'Preparar') : 'Sin cargas';
         return `
           <div class="tienda-item">
-            <div class="tienda-item-icono">${def.icono}</div>
+            <div class="tienda-item-icono">${icono(def.icono)}</div>
             <div class="tienda-item-info">
               <div class="tienda-item-nombre">${def.nombre}</div>
               <div class="tienda-item-desc">${def.desc}</div>
@@ -95,7 +99,7 @@ export function crearPantallaTienda(contexto: ContextoJuego, onCerrar: () => voi
         const textoBtn = !comprado ? `Comprar &middot; ${def.costo}` : equipado ? 'Quitar' : 'Equipar';
         return `
           <div class="tienda-item">
-            <div class="tienda-item-icono">${def.icono}</div>
+            <div class="tienda-item-icono">${icono(def.icono)}</div>
             <div class="tienda-item-info">
               <div class="tienda-item-nombre">${def.nombre}</div>
               <div class="tienda-item-desc">${def.desc}</div>
@@ -114,7 +118,7 @@ export function crearPantallaTienda(contexto: ContextoJuego, onCerrar: () => voi
     const items = await sincronizarPerfilDesdeServidor(contexto);
     actualizarSaldo();
     if (!items) {
-      mostrarToast({ icono: '⚠️', texto: 'No se pudo cargar la tienda del servidor', tipo: 'error' });
+      mostrarToast({ icono: 'triangle-exclamation', texto: 'No se pudo cargar la tienda del servidor', tipo: 'error' });
       renderOffline(); // último recurso: al menos mostrar algo usable
       return;
     }
@@ -128,7 +132,7 @@ export function crearPantallaTienda(contexto: ContextoJuego, onCerrar: () => voi
     else resultado = await prepararItem(itemId);
 
     if (!resultado.ok) {
-      mostrarToast({ icono: '⚠️', texto: resultado.error ?? 'No se pudo completar la acción', tipo: 'error' });
+      mostrarToast({ icono: 'triangle-exclamation', texto: resultado.error ?? 'No se pudo completar la acción', tipo: 'error' });
       return;
     }
     await cargarOnline();

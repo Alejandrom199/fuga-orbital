@@ -14,13 +14,17 @@ function escapeHtml(texto: string): string {
   return div.innerHTML;
 }
 
+function icono(nombreFa: string): string {
+  return `<i class="fa-solid fa-${nombreFa}" aria-hidden="true"></i>`;
+}
+
 /** Pantalla de logros (Fase 6): `GET /logros` (catálogo visible +
  * desbloqueados + progreso de los acumulativos, calculado al vuelo en el
  * servidor). Requiere sesión: los logros persisten en la cuenta, igual que
  * niveles/ranking por usuario — no tiene sentido offline. Los `secreto` no
- * desbloqueados ya llegan ocultos (nombre '???', icono ❔) del servidor, así
- * que no hay lógica de ocultamiento aquí, sólo una variante visual `.secreta`
- * un poco más atenuada. */
+ * desbloqueados ya llegan ocultos (nombre '???', icono 'circle-question')
+ * del servidor, así que no hay lógica de ocultamiento aquí, sólo una
+ * variante visual `.secreta` un poco más atenuada. */
 export function crearPantallaLogros(contexto: ContextoJuego, onCerrar: () => void): PantallaLogros {
   const { sesion } = contexto;
 
@@ -45,13 +49,13 @@ export function crearPantallaLogros(contexto: ContextoJuego, onCerrar: () => voi
 
     return `
       <div class="${clases.join(' ')}">
-        <div class="tarjeta-logro-icono">${logro.icono}</div>
+        <div class="tarjeta-logro-icono">${icono(logro.icono)}</div>
         <div class="tarjeta-logro-info">
           <div class="tarjeta-logro-nombre">${escapeHtml(logro.nombre)}</div>
           <div class="tarjeta-logro-desc">${escapeHtml(logro.descripcion)}</div>
           ${progresoHtml}
         </div>
-        ${logro.desbloqueado ? '<div class="tarjeta-logro-check" aria-label="Desbloqueado">✔</div>' : ''}
+        ${logro.desbloqueado ? `<div class="tarjeta-logro-check" aria-label="Desbloqueado">${icono('check')}</div>` : ''}
       </div>`;
   }
 
@@ -71,7 +75,7 @@ export function crearPantallaLogros(contexto: ContextoJuego, onCerrar: () => voi
 
     if (!resultado.ok) {
       estadoEl.textContent = 'No se pudieron cargar los logros (revisa tu conexión).';
-      mostrarToast({ icono: '⚠️', texto: 'Sin conexión con el servidor', tipo: 'error' });
+      mostrarToast({ icono: 'triangle-exclamation', texto: 'Sin conexión con el servidor', tipo: 'error' });
       return;
     }
 

@@ -28,7 +28,7 @@ export function crearPantallaRanking(_contexto: ContextoJuego, onCerrar: () => v
 
     if (!resultado.ok) {
       estadoEl.textContent = 'No se pudo cargar el ranking (revisa tu conexión).';
-      mostrarToast({ icono: '⚠️', texto: 'Sin conexión con el servidor', tipo: 'error' });
+      mostrarToast({ icono: 'triangle-exclamation', texto: 'Sin conexión con el servidor', tipo: 'error' });
       return;
     }
 

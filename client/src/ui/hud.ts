@@ -5,7 +5,7 @@ export function actualizarVidas(vidas: number, vidasMax: number): void {
   for (let i = 0; i < vidasMax; i++) {
     const span = document.createElement('span');
     span.className = 'corazon' + (i < vidas ? '' : ' perdido');
-    span.textContent = '❤';
+    span.innerHTML = '<i class="fa-solid fa-heart" aria-hidden="true"></i>';
     cont.appendChild(span);
   }
 }

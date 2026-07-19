@@ -9,32 +9,36 @@ import { items, logros, niveles } from './schema.js';
 
 // ---------- Items: trasplante literal de MEJORAS/COSMETICOS del HTML original ----------
 
+// `icono` es el nombre del ícono de Font Awesome (set "solid"), sin el
+// prefijo `fa-` — el cliente lo renderiza como `<i class="fa-solid fa-{icono}">`.
+// Verificados contra el paquete @fortawesome/fontawesome-free instalado en
+// /client antes de escribirlos acá, para no guardar nombres que no existen.
 const mejoras = [
-  { codigo: 'vidas', nombre: 'Vidas extra', descripcion: 'Un corazón extra para esta partida', icono: '❤', costo: 400 },
+  { codigo: 'vidas', nombre: 'Vidas extra', descripcion: 'Un corazón extra para esta partida', icono: 'heart', costo: 400 },
   {
     codigo: 'iman',
     nombre: 'Imán de monedas',
     descripcion: 'Recoge monedas desde más lejos en esta partida',
-    icono: '🧲',
+    icono: 'magnet',
     costo: 250,
   },
-  { codigo: 'salto', nombre: 'Salto reforzado', descripcion: 'Salta más alto en esta partida', icono: '⬆', costo: 300 },
+  { codigo: 'salto', nombre: 'Salto reforzado', descripcion: 'Salta más alto en esta partida', icono: 'arrow-up', costo: 300 },
   {
     codigo: 'multiplicador',
     nombre: 'Monedas con valor',
     descripcion: 'Las monedas valen x1.4 en esta partida',
-    icono: '✨',
+    icono: 'wand-magic-sparkles',
     costo: 350,
   },
 ] as const;
 
 const cosmeticos = [
-  { codigo: 'gorra', nombre: 'Gorra', descripcion: 'Un gorro con estilo', icono: '🧢', costo: 450 },
-  { codigo: 'gafas', nombre: 'Gafas', descripcion: 'Para verse genial', icono: '🕶️', costo: 500 },
-  { codigo: 'capa', nombre: 'Capa', descripcion: 'Ondea al correr y saltar', icono: '🦸', costo: 700 },
-  { codigo: 'antena', nombre: 'Antena alien', descripcion: 'Una antenita que brilla', icono: '📡', costo: 400 },
-  { codigo: 'bufanda', nombre: 'Bufanda', descripcion: 'Ondea con el viento', icono: '🧣', costo: 420 },
-  { codigo: 'corona', nombre: 'Corona', descripcion: 'Para sentirte de la realeza', icono: '👑', costo: 650 },
+  { codigo: 'gorra', nombre: 'Gorra', descripcion: 'Un gorro con estilo', icono: 'hat-cowboy', costo: 450 },
+  { codigo: 'gafas', nombre: 'Gafas', descripcion: 'Para verse genial', icono: 'glasses', costo: 500 },
+  { codigo: 'capa', nombre: 'Capa', descripcion: 'Ondea al correr y saltar', icono: 'user-ninja', costo: 700 },
+  { codigo: 'antena', nombre: 'Antena alien', descripcion: 'Una antenita que brilla', icono: 'satellite-dish', costo: 400 },
+  { codigo: 'bufanda', nombre: 'Bufanda', descripcion: 'Ondea con el viento', icono: 'vest', costo: 420 },
+  { codigo: 'corona', nombre: 'Corona', descripcion: 'Para sentirte de la realeza', icono: 'crown', costo: 650 },
 ] as const;
 
 async function seedItems() {
@@ -119,7 +123,7 @@ const logrosSeed = [
     codigo: 'primer_salto',
     nombre: 'Primer salto',
     descripcion: 'Juega tu primera partida',
-    icono: '🚀',
+    icono: 'rocket',
     condicion: { ambito: 'total', campo: 'partidas_jugadas', op: '>=', valor: 1 },
     recompensa: 20,
     secreto: false,
@@ -128,7 +132,7 @@ const logrosSeed = [
     codigo: 'superviviente',
     nombre: 'Superviviente',
     descripcion: 'Sobrevive 60 segundos en una partida',
-    icono: '🛡️',
+    icono: 'shield-halved',
     condicion: { ambito: 'partida', campo: 'duracion_s', op: '>=', valor: 60 },
     recompensa: 40,
     secreto: false,
@@ -137,7 +141,7 @@ const logrosSeed = [
     codigo: 'cazarrecompensas',
     nombre: 'Cazarrecompensas',
     descripcion: 'Consigue 100 monedas en una sola partida',
-    icono: '💰',
+    icono: 'sack-dollar',
     condicion: { ambito: 'partida', campo: 'monedas_ganadas', op: '>=', valor: 100 },
     recompensa: 50,
     secreto: false,
@@ -146,7 +150,7 @@ const logrosSeed = [
     codigo: 'maratonista',
     nombre: 'Maratonista',
     descripcion: 'Juega 50 partidas',
-    icono: '🏃',
+    icono: 'person-running',
     condicion: { ambito: 'total', campo: 'partidas_jugadas', op: '>=', valor: 50 },
     recompensa: 150,
     secreto: false,
@@ -155,7 +159,7 @@ const logrosSeed = [
     codigo: 'coleccionista',
     nombre: 'Coleccionista',
     descripcion: 'Compra los 6 cosméticos',
-    icono: '🎁',
+    icono: 'gift',
     condicion: { ambito: 'total', campo: 'cosmeticos_comprados', op: '>=', valor: 6 },
     recompensa: 200,
     secreto: false,
@@ -164,7 +168,7 @@ const logrosSeed = [
     codigo: 'estrella_fugaz',
     nombre: 'Estrella fugaz',
     descripcion: 'Consigue 3 estrellas en un nivel',
-    icono: '⭐',
+    icono: 'star',
     condicion: { ambito: 'total', campo: 'estrellas_max_nivel', op: '>=', valor: 3 },
     recompensa: 60,
     secreto: false,
@@ -173,7 +177,7 @@ const logrosSeed = [
     codigo: 'constelacion',
     nombre: 'Constelación',
     descripcion: 'Acumula 15 estrellas entre todos los niveles',
-    icono: '✨',
+    icono: 'meteor',
     condicion: { ambito: 'total', campo: 'estrellas_acumuladas', op: '>=', valor: 15 },
     recompensa: 300,
     secreto: true,

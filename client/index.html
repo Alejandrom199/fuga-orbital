@@ -19,8 +19,8 @@
     </div>
 
     <div id="barra-superior">
-      <button id="btn-pausa" aria-label="Pausa">❚❚</button>
-      <button id="btn-fullscreen" aria-label="Pantalla completa">⛶</button>
+      <button id="btn-pausa" aria-label="Pausa"><i class="fa-solid fa-pause" aria-hidden="true"></i></button>
+      <button id="btn-fullscreen" aria-label="Pantalla completa"><i class="fa-solid fa-expand" aria-hidden="true"></i></button>
     </div>
 
     <div id="pantalla-inicio" class="pantalla pantalla-modal">
@@ -38,17 +38,17 @@
         </div>
 
         <div class="fila-iconos-menu">
-          <button id="btn-como-jugar" class="boton-icono" aria-label="Cómo se juega" type="button">❔</button>
-          <button id="btn-niveles" class="boton-icono" aria-label="Niveles" type="button">🗺️</button>
-          <button id="btn-tienda" class="boton-icono" aria-label="Tienda" type="button">🛒</button>
-          <button id="btn-logros" class="boton-icono" aria-label="Logros" type="button">🏅</button>
-          <button id="btn-ranking" class="boton-icono" aria-label="Ranking" type="button">🏆</button>
-          <button id="btn-cuenta" class="boton-icono" aria-label="Cuenta" type="button">👤</button>
-          <button id="btn-ajustes" class="boton-icono" aria-label="Ajustes" type="button">⚙️</button>
+          <button id="btn-como-jugar" class="boton-icono" aria-label="Cómo se juega" type="button"><i class="fa-solid fa-circle-question" aria-hidden="true"></i></button>
+          <button id="btn-niveles" class="boton-icono" aria-label="Niveles" type="button"><i class="fa-solid fa-map" aria-hidden="true"></i></button>
+          <button id="btn-tienda" class="boton-icono" aria-label="Tienda" type="button"><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i></button>
+          <button id="btn-logros" class="boton-icono" aria-label="Logros" type="button"><i class="fa-solid fa-medal" aria-hidden="true"></i></button>
+          <button id="btn-ranking" class="boton-icono" aria-label="Ranking" type="button"><i class="fa-solid fa-trophy" aria-hidden="true"></i></button>
+          <button id="btn-cuenta" class="boton-icono" aria-label="Cuenta" type="button"><i class="fa-solid fa-user" aria-hidden="true"></i></button>
+          <button id="btn-ajustes" class="boton-icono" aria-label="Ajustes" type="button"><i class="fa-solid fa-gear" aria-hidden="true"></i></button>
         </div>
 
         <p class="mejoras-listas" id="mejoras-listas"></p>
-        <p class="record">Mejor puntuación <b id="record-inicio">0</b> &middot; 🪙 <b id="saldo-inicio">0</b></p>
+        <p class="record">Mejor puntuación <b id="record-inicio">0</b> &middot; <i class="fa-solid fa-coins" aria-hidden="true"></i> <b id="saldo-inicio">0</b></p>
         <p class="cuenta-estado oculto" id="cuenta-estado-inicio"></p>
       </div>
     </div>
@@ -58,10 +58,10 @@
         <h2>Cómo se juega</h2>
 
         <div class="leyenda">
-          <div class="leyenda-item"><span class="icono">❤</span>3 vidas</div>
-          <div class="leyenda-item"><span class="icono">🪙</span>Monedas</div>
-          <div class="leyenda-item"><span class="icono">👾</span>Enemigos</div>
-          <div class="leyenda-item"><span class="icono">⏱</span>Contrarreloj</div>
+          <div class="leyenda-item"><span class="icono"><i class="fa-solid fa-heart" aria-hidden="true"></i></span>3 vidas</div>
+          <div class="leyenda-item"><span class="icono"><i class="fa-solid fa-coins" aria-hidden="true"></i></span>Monedas</div>
+          <div class="leyenda-item"><span class="icono"><i class="fa-solid fa-robot" aria-hidden="true"></i></span>Enemigos</div>
+          <div class="leyenda-item"><span class="icono"><i class="fa-solid fa-stopwatch" aria-hidden="true"></i></span>Contrarreloj</div>
         </div>
 
         <div class="controles">
@@ -74,7 +74,7 @@
             <span>Pausar la partida</span>
           </div>
           <div class="control-fila">
-            <span class="teclas icono-touch">👆</span>
+            <span class="teclas icono-touch"><i class="fa-solid fa-hand-pointer" aria-hidden="true"></i></span>
             <span>En móvil: toca la pantalla para saltar</span>
           </div>
         </div>
@@ -117,9 +117,9 @@
 
     <div id="pantalla-tienda" class="pantalla pantalla-hoja oculto">
       <header class="hoja-barra">
-        <button id="btn-cerrar-tienda" class="btn-volver" aria-label="Volver" type="button">←</button>
+        <button id="btn-cerrar-tienda" class="btn-volver" aria-label="Volver" type="button"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></button>
         <h2>Tienda</h2>
-        <div class="hoja-barra-extra">🪙 <span id="tienda-saldo">0</span></div>
+        <div class="hoja-barra-extra"><i class="fa-solid fa-coins" aria-hidden="true"></i> <span id="tienda-saldo">0</span></div>
       </header>
       <div class="hoja-cuerpo">
         <div class="hoja-cuerpo-inner">
@@ -135,7 +135,7 @@
 
     <div id="pantalla-cuenta" class="pantalla pantalla-hoja oculto">
       <header class="hoja-barra">
-        <button id="btn-cerrar-cuenta" class="btn-volver" aria-label="Volver" type="button">←</button>
+        <button id="btn-cerrar-cuenta" class="btn-volver" aria-label="Volver" type="button"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></button>
         <h2>Cuenta</h2>
       </header>
       <div class="hoja-cuerpo">
@@ -164,7 +164,7 @@
 
     <div id="pantalla-ranking" class="pantalla pantalla-hoja oculto">
       <header class="hoja-barra">
-        <button id="btn-cerrar-ranking" class="btn-volver" aria-label="Volver" type="button">←</button>
+        <button id="btn-cerrar-ranking" class="btn-volver" aria-label="Volver" type="button"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></button>
         <h2>Ranking</h2>
       </header>
       <div class="hoja-cuerpo">
@@ -177,7 +177,7 @@
 
     <div id="pantalla-niveles" class="pantalla pantalla-hoja oculto">
       <header class="hoja-barra">
-        <button id="btn-cerrar-niveles" class="btn-volver" aria-label="Volver" type="button">←</button>
+        <button id="btn-cerrar-niveles" class="btn-volver" aria-label="Volver" type="button"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></button>
         <h2>Niveles</h2>
       </header>
       <div class="hoja-cuerpo">
@@ -190,7 +190,7 @@
 
     <div id="pantalla-logros" class="pantalla pantalla-hoja oculto">
       <header class="hoja-barra">
-        <button id="btn-cerrar-logros" class="btn-volver" aria-label="Volver" type="button">←</button>
+        <button id="btn-cerrar-logros" class="btn-volver" aria-label="Volver" type="button"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></button>
         <h2>Logros</h2>
       </header>
       <div class="hoja-cuerpo">
@@ -208,7 +208,7 @@
   <div id="toasts" aria-live="polite"></div>
 
   <div id="aviso-rotar">
-    <div class="rotar-icono" aria-hidden="true">📱</div>
+    <div class="rotar-icono" aria-hidden="true"><i class="fa-solid fa-mobile-screen-button"></i></div>
     <p>Gira tu dispositivo a horizontal para jugar</p>
   </div>
 

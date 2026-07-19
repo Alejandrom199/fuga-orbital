@@ -1,3 +1,5 @@
+import '@fortawesome/fontawesome-free/css/fontawesome.min.css';
+import '@fortawesome/fontawesome-free/css/solid.min.css';
 import './style.css';
 import { GestorEscenas } from './core/scene-manager';
 import { iniciarLoop } from './core/loop';
@@ -139,15 +141,23 @@ btnFullscreen.addEventListener('click', alternarFullscreen);
 
 ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach((evento) => {
   document.addEventListener(evento, () => {
-    btnFullscreen.textContent = hayFullscreenActivo() ? '⤢' : '⛶';
+    const icono = btnFullscreen.querySelector('i');
+    icono?.classList.toggle('fa-expand', !hayFullscreenActivo());
+    icono?.classList.toggle('fa-compress', hayFullscreenActivo());
   });
 });
 
 // ---------- Bucle principal ----------
 gestor.draw(ctx); // primer frame inmediato (fondo del menú) antes del primer rAF
 
+const barraSuperior = document.getElementById('barra-superior')!;
+
 iniciarLoop((dt) => {
   if (enPortrait) return;
   gestor.update(dt);
   gestor.draw(ctx);
+  // Pausa/pantalla-completa sólo tienen sentido durante una partida (la
+  // propia escena 'juego' cubre jugando/pausa/game-over) — en el menú y sus
+  // pantallas (tienda, niveles, etc.) no deben verse.
+  barraSuperior.classList.toggle('oculto', gestor.nombreActual !== 'juego');
 });

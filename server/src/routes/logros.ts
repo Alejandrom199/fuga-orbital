@@ -26,7 +26,7 @@ export default async function logrosRoutes(fastify: FastifyInstance) {
             codigo: logro.codigo,
             nombre: '???',
             descripcion: 'Logro secreto todavía no descubierto',
-            icono: '❔',
+            icono: 'circle-question',
             secreto: true,
             desbloqueado: false,
             progreso: null,

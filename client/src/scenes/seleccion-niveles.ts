@@ -50,7 +50,7 @@ export function crearPantallaNiveles(contexto: ContextoJuego, onCerrar: () => vo
 
     if (!resultado.ok) {
       estadoEl.textContent = 'No se pudieron cargar los niveles (revisa tu conexión).';
-      mostrarToast({ icono: '⚠️', texto: 'Sin conexión con el servidor', tipo: 'error' });
+      mostrarToast({ icono: 'triangle-exclamation', texto: 'Sin conexión con el servidor', tipo: 'error' });
       return;
     }
 
@@ -74,7 +74,7 @@ export function crearPantallaNiveles(contexto: ContextoJuego, onCerrar: () => vo
           <div class="tarjeta-nivel-nombre">${escapeHtml(nivel.nombre)}</div>
           <div class="tarjeta-nivel-estrellas">${estrellasHtml(nivel.estrellas)}</div>
         </div>
-        ${bloqueado ? '<div class="tarjeta-nivel-candado" aria-label="Bloqueado">🔒</div>' : ''}
+        ${bloqueado ? '<div class="tarjeta-nivel-candado" aria-label="Bloqueado"><i class="fa-solid fa-lock" aria-hidden="true"></i></div>' : ''}
       </div>`;
   }
 

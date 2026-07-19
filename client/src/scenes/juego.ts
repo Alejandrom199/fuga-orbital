@@ -146,7 +146,7 @@ export function crearEscenaJuego(contexto: ContextoJuego): EscenaJuego {
       if (resultado.datos.nivelCompletado) {
         pantallaGameOver.mostrarResultadoNivel(resultado.datos.nivelCompletado);
         if (resultado.datos.nivelCompletado.completado) {
-          mostrarToast({ icono: '🚀', texto: '¡Nivel completado!', tipo: 'nivel' });
+          mostrarToast({ icono: 'flag-checkered', texto: '¡Nivel completado!', tipo: 'nivel' });
         }
       }
 

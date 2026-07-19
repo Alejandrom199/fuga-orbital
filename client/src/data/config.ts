@@ -84,22 +84,28 @@ export interface DefinicionItem {
   costo: number;
 }
 
+// `icono` es un nombre de ícono de Font Awesome (set "solid"), sin el
+// prefijo `fa-` — mismos valores que server/src/seed.ts, para que la tienda
+// se vea igual con o sin sesión (offline usa esta tabla, online usa lo que
+// devuelve GET /tienda). El cliente los renderiza como
+// `<i class="fa-solid fa-{icono}">`.
+//
 // MEJORAS: consumibles de un solo uso (cargas). COSMETICOS: permanentes,
 // se compran una vez y se equipan/quitan libremente.
 export const MEJORAS: Record<MejoraId, DefinicionItem> = {
-  vidas: { nombre: 'Vidas extra', desc: 'Un corazón extra para esta partida', icono: '❤', costo: 400 },
-  iman: { nombre: 'Imán de monedas', desc: 'Recoge monedas desde más lejos en esta partida', icono: '🧲', costo: 250 },
-  salto: { nombre: 'Salto reforzado', desc: 'Salta más alto en esta partida', icono: '⬆', costo: 300 },
-  multiplicador: { nombre: 'Monedas con valor', desc: 'Las monedas valen x1.4 en esta partida', icono: '✨', costo: 350 },
+  vidas: { nombre: 'Vidas extra', desc: 'Un corazón extra para esta partida', icono: 'heart', costo: 400 },
+  iman: { nombre: 'Imán de monedas', desc: 'Recoge monedas desde más lejos en esta partida', icono: 'magnet', costo: 250 },
+  salto: { nombre: 'Salto reforzado', desc: 'Salta más alto en esta partida', icono: 'arrow-up', costo: 300 },
+  multiplicador: { nombre: 'Monedas con valor', desc: 'Las monedas valen x1.4 en esta partida', icono: 'wand-magic-sparkles', costo: 350 },
 };
 
 export const COSMETICOS: Record<CosmeticoId, DefinicionItem> = {
-  gorra: { nombre: 'Gorra', desc: 'Un gorro con estilo', icono: '🧢', costo: 450 },
-  gafas: { nombre: 'Gafas', desc: 'Para verse genial', icono: '🕶️', costo: 500 },
-  capa: { nombre: 'Capa', desc: 'Ondea al correr y saltar', icono: '🦸', costo: 700 },
-  antena: { nombre: 'Antena alien', desc: 'Una antenita que brilla', icono: '📡', costo: 400 },
-  bufanda: { nombre: 'Bufanda', desc: 'Ondea con el viento', icono: '🧣', costo: 420 },
-  corona: { nombre: 'Corona', desc: 'Para sentirte de la realeza', icono: '👑', costo: 650 },
+  gorra: { nombre: 'Gorra', desc: 'Un gorro con estilo', icono: 'hat-cowboy', costo: 450 },
+  gafas: { nombre: 'Gafas', desc: 'Para verse genial', icono: 'glasses', costo: 500 },
+  capa: { nombre: 'Capa', desc: 'Ondea al correr y saltar', icono: 'user-ninja', costo: 700 },
+  antena: { nombre: 'Antena alien', desc: 'Una antenita que brilla', icono: 'satellite-dish', costo: 400 },
+  bufanda: { nombre: 'Bufanda', desc: 'Ondea con el viento', icono: 'vest', costo: 420 },
+  corona: { nombre: 'Corona', desc: 'Para sentirte de la realeza', icono: 'crown', costo: 650 },
 };
 
 export const BONUS_VIDAS = 1;

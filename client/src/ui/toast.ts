@@ -5,9 +5,10 @@
  * necesario porque `POST /partidas` responde en segundo plano y, para
  * cuando llega, el jugador puede estar en game-over o de vuelta en el menú.
  *
- * Uso: mostrarToast({ icono: '🏆', texto: 'Logro: Primer salto', tipo: 'logro' }).
- * Tres variantes previstas (sólo cambian el acento): 'logro' (default),
- * 'nivel', 'error'.
+ * Uso: mostrarToast({ icono: 'trophy', texto: 'Logro: Primer salto', tipo: 'logro' }).
+ * `icono` es un nombre de ícono de Font Awesome ("solid"), sin el prefijo
+ * `fa-`. Tres variantes previstas (sólo cambian el acento): 'logro'
+ * (default), 'nivel', 'error'.
  */
 
 export type TipoToast = 'logro' | 'nivel' | 'error';
@@ -32,7 +33,7 @@ export function mostrarToast(opciones: OpcionesToast): void {
 
   const iconoEl = document.createElement('span');
   iconoEl.className = 'toast-icono';
-  iconoEl.textContent = icono;
+  iconoEl.innerHTML = `<i class="fa-solid fa-${icono}" aria-hidden="true"></i>`;
 
   const textoEl = document.createElement('span');
   textoEl.className = 'toast-texto';
