@@ -1,0 +1,252 @@
+import { crearJugador, saltar as saltarJugador } from '../entities/jugador';
+import type { EstadoMundo } from '../entities/mundo';
+import { reiniciarMundo, actualizarSpawns } from '../systems/spawner';
+import { actualizarJugador, actualizarEnemigos, actualizarMonedas } from '../systems/colisiones';
+import type { CausaMuerte } from '../systems/colisiones';
+import { actualizarDificultad, puntuacionTotal } from '../systems/dificultad';
+import { actualizarTextosFlotantes, actualizarShake } from '../systems/particulas';
+import { dibujarFondo } from '../render/fondo';
+import { dibujarVagones } from '../render/tren';
+import { dibujarMonedas } from '../render/monedas';
+import { dibujarEnemigos } from '../render/enemigos';
+import { dibujarTextos } from '../render/textos';
+import { dibujarPersonaje } from '../render/personaje';
+import { formatearTiempo } from '../render/util';
+import { actualizarVidas, actualizarPuntuacion, actualizarTiempo } from '../ui/hud';
+import { mostrarPantalla } from '../ui/pantallas';
+import { guardarPerfil, guardarMejorPuntuacion } from '../services/storage';
+import { enviarPartida } from '../services/api';
+import { MEJORAS, BONUS_VIDAS, BONUS_SALTO, VIDAS_BASE } from '../data/config';
+import type { MejoraId, PresetJuego } from '../data/config';
+import { configurarInput } from '../core/input';
+import type { Escena } from '../core/scene-manager';
+import type { ContextoJuego } from '../core/contexto';
+import { crearPantallaPausa } from './pausa';
+import { crearPantallaGameOver } from './game-over';
+
+type EstadoPartida = 'jugando' | 'pausa' | 'gameover';
+
+export interface EscenaJuego extends Escena {
+  /** Pausa sólo si hay una partida en curso; a diferencia de alternarPausa()
+   * nunca reanuda (se usa cuando el dispositivo gira a vertical). */
+  pausarPorRotacion(): void;
+}
+
+function crearEstadoInicial(preset: PresetJuego, trainBaseY: number): EstadoMundo {
+  return {
+    cameraX: 0,
+    worldSpeed: preset.baseSpeed,
+    tiempoJugado: 0,
+    monedasScore: 0,
+    distanciaAcc: 0,
+    plataformas: [],
+    monedas: [],
+    enemigos: [],
+    textosFlotantes: [],
+    nextSpawnX: 0,
+    ultimoTopY: trainBaseY,
+    shakeTimer: 0,
+    vidas: 0,
+    player: crearJugador(preset, trainBaseY),
+  };
+}
+
+export function crearEscenaJuego(contexto: ContextoJuego): EscenaJuego {
+  const { perfil, registro, gestor, preset, canvas, sesion } = contexto;
+
+  let estadoPartida: EstadoPartida = 'gameover';
+  let mundo: EstadoMundo = crearEstadoInicial(preset, 0);
+  let efectosActivos: Record<MejoraId, boolean> = { vidas: false, iman: false, salto: false, multiplicador: false };
+
+  function vidasMax(): number {
+    return VIDAS_BASE + (efectosActivos.vidas ? BONUS_VIDAS : 0);
+  }
+
+  function actualizarHUDVidas(): void {
+    actualizarVidas(mundo.vidas, vidasMax());
+  }
+
+  function finalizarPartida(): number {
+    const total = puntuacionTotal(mundo);
+    if (total > registro.mejorPuntuacion) {
+      registro.mejorPuntuacion = total;
+      guardarMejorPuntuacion(total);
+    }
+    if (mundo.monedasScore > 0) {
+      perfil.monedas += mundo.monedasScore;
+      guardarPerfil(perfil);
+    }
+    sincronizarPartidaConServidor(total);
+    return total;
+  }
+
+  // Sincronización Fase 3: sólo si hay sesión activa, y siempre en segundo
+  // plano — nunca bloquea el game-over ni afecta el guardado local, que
+  // sigue siendo la fuente de verdad (offline-first). `enviarPartida` nunca
+  // rechaza (ver services/api.ts), así que no hace falta atrapar errores aquí.
+  function sincronizarPartidaConServidor(total: number): void {
+    if (!sesion.usuario) return;
+    void enviarPartida({
+      modo: 'endless',
+      puntos: total,
+      monedasGanadas: mundo.monedasScore,
+      duracionS: Math.max(1, Math.round(mundo.tiempoJugado)),
+      mejorasUsadas: efectosActivos,
+    });
+  }
+
+  function gameOver(causa: CausaMuerte): void {
+    estadoPartida = 'gameover';
+    const total = finalizarPartida();
+    pantallaGameOver.mostrar({
+      causa,
+      puntuacion: total,
+      tiempoJugado: mundo.tiempoJugado,
+      mejorPuntuacion: registro.mejorPuntuacion,
+    });
+  }
+
+  function perderVida(causa: CausaMuerte): void {
+    if (mundo.player.invulnTimer > 0 || estadoPartida !== 'jugando') return;
+    mundo.vidas--;
+    mundo.shakeTimer = 0.3;
+    actualizarHUDVidas();
+
+    if (mundo.vidas <= 0) {
+      gameOver(causa);
+      return;
+    }
+
+    // Reubicar al jugador sobre la plataforma más cercana por delante de la cámara
+    let destino = mundo.plataformas.find((p) => p.x2 > mundo.cameraX + 40) ?? null;
+    if (!destino) destino = mundo.plataformas[mundo.plataformas.length - 1] ?? null;
+    if (!destino) return;
+
+    const objetivoX = Math.max(destino.x1 + 40, mundo.cameraX + preset.playerScreenX);
+    mundo.player.worldX = Math.min(objetivoX, destino.x2 - 40);
+    mundo.player.y = destino.topY - preset.playerH / 2;
+    mundo.player.vy = 0;
+    mundo.player.grounded = true;
+    mundo.player.jumpsRemaining = preset.maxJumps;
+    mundo.player.hitStunTimer = 0;
+    mundo.player.invulnTimer = preset.invulnTime;
+  }
+
+  // Convierte lo preparado en la tienda en efectos de la partida: gasta una
+  // carga de inventario por cada mejora preparada y la deja lista para usarse.
+  function consumirMejorasPreparadas(): void {
+    efectosActivos = { vidas: false, iman: false, salto: false, multiplicador: false };
+    let huboConsumo = false;
+    for (const id of Object.keys(MEJORAS) as MejoraId[]) {
+      if (perfil.seleccion[id] && perfil.inventario[id] > 0) {
+        perfil.inventario[id]--;
+        perfil.seleccion[id] = false;
+        efectosActivos[id] = true;
+        huboConsumo = true;
+      }
+    }
+    if (huboConsumo) guardarPerfil(perfil);
+  }
+
+  function iniciarPartida(): void {
+    consumirMejorasPreparadas();
+    const { W, trainBaseY } = contexto.obtenerDimensiones();
+    mundo = crearEstadoInicial(preset, trainBaseY);
+    mundo.vidas = vidasMax();
+    actualizarHUDVidas();
+    reiniciarMundo(mundo, preset, W, trainBaseY);
+    estadoPartida = 'jugando';
+    mostrarPantalla(null);
+  }
+
+  function volverAlMenuPrincipal(): void {
+    if (estadoPartida === 'jugando' || estadoPartida === 'pausa') finalizarPartida();
+    gestor.cambiar('menu');
+  }
+
+  function alternarPausa(): void {
+    if (estadoPartida === 'jugando') {
+      estadoPartida = 'pausa';
+      pantallaPausa.mostrar();
+    } else if (estadoPartida === 'pausa') {
+      estadoPartida = 'jugando';
+      pantallaPausa.ocultar();
+    }
+  }
+
+  function saltar(): void {
+    if (estadoPartida !== 'jugando') return;
+    const boost = efectosActivos.salto ? BONUS_SALTO : 0;
+    saltarJugador(mundo.player, preset, boost);
+  }
+
+  const pantallaPausa = crearPantallaPausa(alternarPausa, volverAlMenuPrincipal);
+  const pantallaGameOver = crearPantallaGameOver(() => iniciarPartida(), volverAlMenuPrincipal);
+
+  configurarInput(canvas, { onSaltar: saltar, onPausa: alternarPausa });
+
+  function dibujarJugadorEnPantalla(ctx: CanvasRenderingContext2D): void {
+    const player = mundo.player;
+    const sx = player.worldX - mundo.cameraX;
+    const parpadeo = player.invulnTimer > 0 && Math.floor(mundo.tiempoJugado * 14) % 2 === 0;
+    if (parpadeo) return;
+    ctx.save();
+    ctx.translate(sx, player.y + preset.playerH / 2);
+    ctx.scale(2 - player.squash, player.squash);
+    dibujarPersonaje(ctx, preset.playerW, preset.playerH, {
+      t: mundo.tiempoJugado,
+      grounded: player.grounded,
+      faseCarrera: player.worldX * 0.05,
+      equipados: perfil.equipados,
+    });
+    ctx.restore();
+  }
+
+  return {
+    enter(): void {
+      iniciarPartida();
+    },
+
+    update(dt: number): void {
+      if (estadoPartida !== 'jugando') return;
+      const { W, trainBaseY } = contexto.obtenerDimensiones();
+
+      mundo.tiempoJugado += dt;
+      actualizarDificultad(mundo, dt, preset);
+      actualizarSpawns(mundo, preset, W, trainBaseY);
+      actualizarJugador(mundo, dt, preset, trainBaseY, perderVida);
+      if (estadoPartida !== 'jugando') return;
+      actualizarEnemigos(mundo, dt, preset, perderVida);
+      actualizarMonedas(mundo, efectosActivos);
+      actualizarTextosFlotantes(mundo, dt);
+      actualizarShake(mundo, dt);
+
+      actualizarPuntuacion(puntuacionTotal(mundo));
+      actualizarTiempo(formatearTiempo(mundo.tiempoJugado));
+    },
+
+    draw(ctx: CanvasRenderingContext2D): void {
+      const { W, H } = contexto.obtenerDimensiones();
+      ctx.save();
+      if (mundo.shakeTimer > 0) {
+        ctx.translate((Math.random() - 0.5) * 10 * mundo.shakeTimer, (Math.random() - 0.5) * 10 * mundo.shakeTimer);
+      }
+      dibujarFondo({ ctx, W, H, cameraX: mundo.cameraX, tiempoJugado: mundo.tiempoJugado });
+      dibujarVagones(ctx, mundo.plataformas, mundo.cameraX, W, preset, mundo.tiempoJugado);
+      dibujarMonedas(ctx, mundo.monedas, mundo.cameraX, W, mundo.tiempoJugado);
+      dibujarEnemigos(ctx, mundo.enemigos, mundo.cameraX, W, mundo.tiempoJugado);
+      dibujarJugadorEnPantalla(ctx);
+      dibujarTextos(ctx, mundo.textosFlotantes, mundo.cameraX);
+      ctx.restore();
+    },
+
+    exit(): void {},
+
+    pausarPorRotacion(): void {
+      if (estadoPartida === 'jugando') {
+        estadoPartida = 'pausa';
+        pantallaPausa.mostrar();
+      }
+    },
+  };
+}

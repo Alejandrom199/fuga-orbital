@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Fuga Orbital — Salta sobre los trenes</title>
+</head>
+<body>
+  <div id="juego">
+    <canvas id="lienzo"></canvas>
+
+    <div id="hud">
+      <div id="vidas"></div>
+      <div id="stats">
+        <div id="puntuacion">0 pts</div>
+        <div id="tiempo">00:00</div>
+      </div>
+    </div>
+
+    <div id="barra-superior">
+      <button id="btn-pausa" aria-label="Pausa">❚❚</button>
+      <button id="btn-fullscreen" aria-label="Pantalla completa">⛶</button>
+    </div>
+
+    <div id="pantalla-inicio" class="pantalla">
+      <div class="panel panel-inicio">
+        <div class="marca">
+          <span class="logo-planeta" aria-hidden="true"></span>
+          <div class="marca-texto">
+            <h1>FUGA ORBITAL</h1>
+            <p class="subtitulo">Escapa saltando sobre los trenes de un planeta alienígena</p>
+          </div>
+        </div>
+
+        <div class="leyenda">
+          <div class="leyenda-item"><span class="icono">❤</span>3 vidas</div>
+          <div class="leyenda-item"><span class="icono">🪙</span>Monedas</div>
+          <div class="leyenda-item"><span class="icono">👾</span>Enemigos</div>
+          <div class="leyenda-item"><span class="icono">⏱</span>Contrarreloj</div>
+        </div>
+
+        <div class="controles">
+          <div class="control-fila">
+            <span class="teclas"><kbd>Espacio</kbd><kbd>↑</kbd></span>
+            <span>Saltar &middot; doble salto en el aire</span>
+          </div>
+          <div class="control-fila">
+            <span class="teclas"><kbd>P</kbd><kbd>Esc</kbd></span>
+            <span>Pausar la partida</span>
+          </div>
+          <div class="control-fila">
+            <span class="teclas icono-touch">👆</span>
+            <span>En móvil: toca la pantalla para saltar</span>
+          </div>
+        </div>
+
+        <div class="fila-botones-menu">
+          <button id="btn-jugar" class="boton-principal">Jugar</button>
+          <button id="btn-tienda" class="boton-icono" aria-label="Tienda" type="button">🛒</button>
+          <button id="btn-ajustes" class="boton-icono" aria-label="Ajustes" type="button">⚙️</button>
+          <button id="btn-cuenta" class="boton-icono" aria-label="Cuenta" type="button">👤</button>
+          <button id="btn-ranking" class="boton-icono" aria-label="Ranking" type="button">🏆</button>
+        </div>
+        <p class="mejoras-listas" id="mejoras-listas"></p>
+        <p class="record">Mejor puntuación &middot; <span id="record-inicio">0</span> &middot; 🪙 <span id="saldo-inicio">0</span></p>
+        <p class="cuenta-estado oculto" id="cuenta-estado-inicio"></p>
+      </div>
+    </div>
+
+    <div id="pantalla-pausa" class="pantalla oculto">
+      <div class="panel">
+        <h2>Pausa</h2>
+        <button id="btn-reanudar" class="boton-principal">Reanudar</button>
+        <button id="btn-menu-principal" class="boton-secundario" type="button">Menú principal</button>
+      </div>
+    </div>
+
+    <div id="pantalla-gameover" class="pantalla oculto">
+      <div class="panel">
+        <h2>¡Fin del viaje!</h2>
+        <p id="motivo-muerte" class="motivo"></p>
+        <div class="resumen">
+          <div class="resumen-fila"><span>Puntuación</span><span id="puntuacion-final">0</span></div>
+          <div class="resumen-fila"><span>Tiempo sobrevivido</span><span id="tiempo-final">00:00</span></div>
+          <div class="resumen-fila"><span>Mejor puntuación</span><span id="record-final">0</span></div>
+        </div>
+        <button id="btn-reintentar" class="boton-principal">Reintentar</button>
+        <button id="btn-menu-principal-gameover" class="boton-secundario" type="button">Menú principal</button>
+      </div>
+    </div>
+
+    <div id="pantalla-tienda" class="pantalla oculto">
+      <div class="panel panel-tienda">
+        <h2>Tienda</h2>
+        <p class="saldo-tienda">🪙 <span id="tienda-saldo">0</span></p>
+        <div class="tabs">
+          <button class="tab-btn activo" data-tab="mejoras" type="button">Mejoras</button>
+          <button class="tab-btn" data-tab="cosmeticos" type="button">Personaje</button>
+        </div>
+        <div id="tienda-lista-mejoras" class="tienda-lista"></div>
+        <div id="tienda-lista-cosmeticos" class="tienda-lista oculto"></div>
+        <button id="btn-cerrar-tienda" class="boton-principal">Volver</button>
+      </div>
+    </div>
+
+    <div id="pantalla-ajustes" class="pantalla oculto">
+      <div class="panel">
+        <h2>Ajustes</h2>
+        <p class="motivo">Esto borra tu progreso guardado: monedas, mejoras, cosméticos y mejor puntuación.</p>
+        <button id="btn-borrar-datos" class="boton-secundario boton-peligro" type="button">Borrar datos guardados</button>
+        <button id="btn-cerrar-ajustes" class="boton-principal">Volver</button>
+      </div>
+    </div>
+
+    <div id="pantalla-cuenta" class="pantalla oculto">
+      <div class="panel panel-cuenta">
+        <h2>Cuenta</h2>
+
+        <div id="cuenta-sesion-activa" class="cuenta-sesion oculto">
+          <p>Conectado como <strong id="cuenta-nombre-activo"></strong></p>
+          <button id="btn-cerrar-sesion" class="boton-secundario boton-peligro" type="button">Cerrar sesión</button>
+        </div>
+
+        <div id="cuenta-formulario-wrap" class="cuenta-formulario-wrap">
+          <div class="tabs">
+            <button class="tab-btn activo" data-modo="login" type="button">Iniciar sesión</button>
+            <button class="tab-btn" data-modo="registro" type="button">Crear cuenta</button>
+          </div>
+          <form id="form-cuenta" class="form-cuenta" autocomplete="off">
+            <input id="cuenta-nombre" class="cuenta-input" name="nombre" type="text" placeholder="Nombre de usuario" minlength="3" maxlength="32" required />
+            <input id="cuenta-password" class="cuenta-input" name="password" type="password" placeholder="Contraseña" minlength="6" maxlength="72" required />
+            <p id="cuenta-error" class="cuenta-error oculto"></p>
+            <button id="btn-enviar-cuenta" class="boton-principal" type="submit">Iniciar sesión</button>
+          </form>
+          <p class="cuenta-nota">Sin conexión el juego sigue funcionando igual; tu progreso local no se pierde.</p>
+        </div>
+
+        <button id="btn-cerrar-cuenta" class="boton-secundario">Volver</button>
+      </div>
+    </div>
+
+    <div id="pantalla-ranking" class="pantalla oculto">
+      <div class="panel panel-tienda">
+        <h2>Ranking</h2>
+        <p id="ranking-estado" class="motivo oculto"></p>
+        <div id="ranking-lista" class="tienda-lista"></div>
+        <button id="btn-cerrar-ranking" class="boton-principal">Volver</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="aviso-rotar">
+    <div class="rotar-icono" aria-hidden="true">📱</div>
+    <p>Gira tu dispositivo a horizontal para jugar</p>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

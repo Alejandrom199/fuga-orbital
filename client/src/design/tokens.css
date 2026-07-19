@@ -1,0 +1,58 @@
+/* Sistema de diseño de Fuga Orbital: espacio profundo con neones.
+ * Todo color/espaciado/forma/tipografía de la UI (HTML+CSS) sale de aquí;
+ * el arte dibujado en canvas (personaje, enemigos, fondo) no se tokeniza,
+ * igual que un sprite no tendría variables CSS. */
+:root {
+  /* Color — fondos */
+  --fondo-espacio: #05010f;
+  --fondo-panel: #100626;
+  --fondo-panel-translucido: rgba(20, 10, 40, 0.55);
+
+  /* Color — texto */
+  --texto-principal: #f2ecff;
+  --texto-suave: #eaf6ff;
+  --texto-atenuado: #cabfe8;
+
+  /* Color — acentos neón */
+  --neon-cian: #7cf7ff;
+  --neon-magenta: #ff7ce8;
+  --neon-violeta: #dcd2f7;
+  --neon-azul: #7c9bff;
+  --borde-neon: rgba(180, 120, 255, 0.5);
+  --borde-neon-suave: rgba(180, 140, 255, 0.22);
+
+  /* Color — semánticos */
+  --oro: #ffe27c;
+  --peligro: #ff5c7a;
+
+  /* Glow: blur estandarizado en 2 intensidades; el color lo pone cada
+   * elemento (el glow es identidad del juego, pero sólo en elementos
+   * interactivos o de estado, nunca en texto largo). */
+  --glow-suave: 6px;
+  --glow-fuerte: 25px;
+
+  /* Espaciado */
+  --espacio-1: 4px;
+  --espacio-2: 8px;
+  --espacio-3: 12px;
+  --espacio-4: 16px;
+  --espacio-5: 24px;
+  --espacio-6: 32px;
+
+  /* Forma */
+  --radio-control: 8px;
+  --radio-panel: 16px;
+
+  /* Tipografía */
+  --fuente: 'Segoe UI', Verdana, Arial, sans-serif;
+  --texto-xs: 13px;
+  --texto-sm: 15px;
+  --texto-md: 17px;
+  --texto-lg: 22px;
+  --texto-xl: 28px;
+  --peso-normal: 400;
+  --peso-bold: 700;
+
+  /* Touch target mínimo recomendado (móvil) */
+  --touch-minimo: 44px;
+}

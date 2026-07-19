@@ -1,0 +1,449 @@
+@import './tokens.css';
+
+/* Utilidad genérica de visibilidad: además de los toggles ya definidos para
+ * .pantalla y .tienda-lista (que quedan intactos), cualquier elemento nuevo
+ * puede usar .oculto directamente. */
+.oculto {
+  display: none;
+}
+
+/* ============================================================
+ * Botones
+ * Uso: <button class="boton-principal">Jugar</button>
+ *      <button class="boton-secundario">Volver</button>
+ *      <button class="boton-secundario boton-peligro">Borrar</button>
+ *      <button class="boton-icono" aria-label="Pausa">❚❚</button>
+ * ============================================================ */
+.boton-principal {
+  background: linear-gradient(135deg, var(--neon-magenta), var(--neon-azul));
+  color: var(--fondo-panel);
+  border: none;
+  border-radius: 30px;
+  padding: 14px 46px;
+  font-size: var(--texto-md);
+  font-weight: var(--peso-bold);
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: 0 0 var(--glow-fuerte) rgba(255, 124, 232, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  min-height: var(--touch-minimo);
+}
+
+.boton-principal:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 0 calc(var(--glow-fuerte) + 10px) rgba(124, 247, 255, 0.55);
+}
+
+.boton-principal:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.boton-principal:disabled {
+  opacity: 0.5;
+  cursor: default;
+  transform: none;
+  box-shadow: none;
+}
+
+.boton-secundario {
+  background: transparent;
+  color: var(--texto-atenuado);
+  border: 1px solid var(--borde-neon-suave);
+  border-radius: 30px;
+  padding: 10px 28px;
+  font-size: var(--texto-xs);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  min-height: var(--touch-minimo);
+}
+
+.boton-secundario:hover {
+  background: rgba(180, 140, 255, 0.16);
+  color: var(--texto-principal);
+}
+
+.boton-peligro {
+  color: #ff9ecf;
+  border-color: rgba(255, 90, 140, 0.4);
+}
+
+.boton-peligro:hover {
+  background: rgba(255, 90, 140, 0.16);
+  color: #ffd2e6;
+}
+
+/* Botón circular de icono: tienda/ajustes en el menú, pausa/fullscreen en el HUD */
+.boton-icono {
+  border-radius: 50%;
+  border: 1px solid var(--borde-neon);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--oro);
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.boton-icono:hover {
+  background: rgba(180, 140, 255, 0.22);
+  transform: translateY(-2px) scale(1.05);
+}
+
+/* ============================================================
+ * Panel modal
+ * Uso: base compartida por pausa, game-over, tienda y ajustes.
+ * <div class="pantalla"><div class="panel"> ... </div></div>
+ * ============================================================ */
+.pantalla {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--espacio-5);
+  color: var(--texto-principal);
+  background: rgba(6, 2, 18, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.pantalla.oculto {
+  display: none;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--espacio-4);
+  text-align: center;
+  width: 100%;
+  max-width: 460px;
+  padding: 36px 34px;
+  border-radius: var(--radio-panel);
+  background: linear-gradient(180deg, rgba(38, 16, 66, 0.9), rgba(16, 6, 34, 0.94));
+  border: 1px solid var(--borde-neon-suave);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+    0 1px 0 rgba(255, 255, 255, 0.08) inset;
+  animation: panel-entrada 0.35s ease both;
+}
+
+.panel h2 {
+  font-size: clamp(24px, 5.5vw, 34px);
+  color: #ffd27c;
+  text-shadow: 0 0 20px rgba(255, 180, 80, 0.5);
+}
+
+@keyframes panel-entrada {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ============================================================
+ * Tabs
+ * Uso: tienda (mejoras/cosméticos).
+ * <div class="tabs"><button class="tab-btn activo">Mejoras</button>...
+ * ============================================================ */
+.tabs {
+  display: flex;
+  gap: var(--espacio-2);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+  padding: 4px;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--texto-atenuado);
+  padding: 8px 20px;
+  border-radius: 999px;
+  font-size: var(--texto-xs);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  min-height: var(--touch-minimo);
+}
+
+.tab-btn.activo {
+  background: linear-gradient(135deg, var(--neon-magenta), var(--neon-azul));
+  color: var(--fondo-panel);
+  font-weight: var(--peso-bold);
+}
+
+/* ============================================================
+ * Tarjeta de tienda
+ * Uso: una fila por item (mejora o cosmético) dentro de .tienda-lista.
+ * El botón de acción cambia de variante según el estado: comprar
+ * (primario), preparar/equipar (secundario), equipado (verde), agotado/max
+ * (deshabilitado).
+ * ============================================================ */
+.tienda-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--borde-neon-suave);
+  border-radius: 14px;
+  padding: 10px var(--espacio-4);
+  text-align: left;
+}
+
+.tienda-item-icono {
+  font-size: 28px;
+  flex-shrink: 0;
+  width: 36px;
+  text-align: center;
+}
+
+.tienda-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.tienda-item-nombre {
+  font-size: var(--texto-xs);
+  font-weight: var(--peso-bold);
+  color: var(--texto-principal);
+}
+
+.tienda-item-desc {
+  font-size: 12px;
+  color: #ab9fc9;
+  margin-top: 1px;
+}
+
+.tienda-item-nivel {
+  font-size: 11.5px;
+  color: var(--neon-cian);
+  margin-top: 3px;
+}
+
+.tienda-item-acciones {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tienda-item-btn {
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--neon-magenta), var(--neon-azul));
+  color: var(--fondo-panel);
+  border: none;
+  border-radius: 20px;
+  padding: 9px var(--espacio-4);
+  font-size: 12.5px;
+  font-weight: var(--peso-bold);
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 36px;
+}
+
+.tienda-item-btn.secundario {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--neon-violeta);
+  border: 1px solid var(--borde-neon-suave);
+}
+
+.tienda-item-btn.equipado {
+  background: linear-gradient(135deg, #5cff8a, #3fd0ff);
+  color: #0a2618;
+}
+
+.tienda-item-btn.maxed,
+.tienda-item-btn:disabled {
+  background: rgba(255, 255, 255, 0.08);
+  color: #7a7391;
+  cursor: default;
+}
+
+/* ============================================================
+ * HUD
+ * Uso: overlay fijo durante la partida (vidas, puntuación, tiempo).
+ * ============================================================ */
+#hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: var(--espacio-4) 20px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+#vidas {
+  display: flex;
+  gap: var(--espacio-2);
+}
+
+.corazon {
+  font-size: 26px;
+  filter: drop-shadow(0 0 4px rgba(255, 60, 140, 0.8));
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.corazon.perdido {
+  opacity: 0.25;
+  transform: scale(0.8);
+  filter: none;
+}
+
+#stats {
+  text-align: right;
+  color: var(--texto-suave);
+  text-shadow: 0 0 var(--glow-suave) rgba(0, 220, 255, 0.6);
+}
+
+#puntuacion {
+  font-size: var(--texto-lg);
+  font-weight: var(--peso-bold);
+  letter-spacing: 0.5px;
+}
+
+#tiempo {
+  font-size: var(--texto-sm);
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+#barra-superior {
+  position: absolute;
+  top: var(--espacio-4);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+}
+
+#btn-pausa,
+#btn-fullscreen {
+  background: var(--fondo-panel-translucido);
+  color: var(--texto-suave);
+  border: 1px solid var(--borde-neon);
+  border-radius: var(--radio-control);
+  font-size: var(--texto-sm);
+  cursor: pointer;
+  backdrop-filter: blur(3px);
+}
+
+#btn-pausa {
+  padding: 6px 14px;
+  min-height: 36px;
+}
+
+#btn-fullscreen {
+  width: 38px;
+  height: 34px;
+  font-size: var(--texto-md);
+  line-height: 1;
+}
+
+#btn-pausa:hover,
+#btn-fullscreen:hover {
+  background: rgba(180, 120, 255, 0.35);
+}
+
+/* ============================================================
+ * Formulario de cuenta (Fase 3)
+ * Uso: pantalla-cuenta — login/registro y estado de sesión activa.
+ * <div class="cuenta-formulario-wrap">
+ *   <div class="tabs">...</div>
+ *   <form class="form-cuenta"><input class="cuenta-input">...</form>
+ * </div>
+ * ============================================================ */
+.cuenta-formulario-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--espacio-3);
+}
+
+.form-cuenta {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-3);
+}
+
+.cuenta-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--borde-neon-suave);
+  border-radius: var(--radio-control);
+  padding: 12px var(--espacio-3);
+  color: var(--texto-principal);
+  font-family: var(--fuente);
+  font-size: var(--texto-sm);
+  min-height: var(--touch-minimo);
+}
+
+.cuenta-input::placeholder {
+  color: #8a7fa8;
+}
+
+.cuenta-input:focus {
+  outline: none;
+  border-color: var(--borde-neon);
+}
+
+.cuenta-error {
+  color: var(--peligro);
+  font-size: 12.5px;
+}
+
+.cuenta-nota {
+  font-size: 12px;
+  color: var(--texto-atenuado);
+}
+
+.cuenta-sesion {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--espacio-3);
+}
+
+.cuenta-sesion strong {
+  color: var(--neon-cian);
+}
+
+/* Ambos fijan su propio `display`, así que necesitan su toggle .oculto
+ * escopado (misma especificidad que la utilidad genérica, pero declarado
+ * después vence por orden de cascada — igual que .pantalla.oculto). */
+.cuenta-sesion.oculto,
+.cuenta-formulario-wrap.oculto {
+  display: none;
+}
+
+/* Estado de sesión mostrado en el menú principal, junto al récord. */
+.cuenta-estado {
+  font-size: 12px;
+  color: var(--neon-cian);
+}
+
+/* ============================================================
+ * Ranking (Fase 3)
+ * Uso: pantalla-ranking — reutiliza .tienda-item por fila.
+ * ============================================================ */
+.ranking-puesto {
+  font-size: var(--texto-md);
+  font-weight: var(--peso-bold);
+  color: var(--oro);
+  width: 32px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.ranking-puntos {
+  font-weight: var(--peso-bold);
+  color: var(--neon-cian);
+  flex-shrink: 0;
+}

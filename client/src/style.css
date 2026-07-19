@@ -1,0 +1,283 @@
+@import './design/componentes.css';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--fondo-espacio);
+  font-family: var(--fuente);
+  touch-action: none;
+}
+
+#juego {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+#lienzo {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Aviso de girar el dispositivo */
+
+#aviso-rotar {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: var(--fondo-espacio);
+  color: var(--texto-principal);
+  text-align: center;
+  padding: var(--espacio-6);
+}
+
+#aviso-rotar.visible {
+  display: flex;
+}
+
+.rotar-icono {
+  font-size: 64px;
+  animation: rotar-girar 1.6s ease-in-out infinite;
+}
+
+@keyframes rotar-girar {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(90deg); }
+}
+
+#aviso-rotar p {
+  font-size: var(--texto-sm);
+  max-width: 320px;
+  color: var(--neon-violeta);
+}
+
+/* Marca (menú principal) */
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-4);
+  text-align: left;
+}
+
+.logo-planeta {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #ffedc7, #ffb85e 55%, #a9701c 100%);
+  box-shadow: 0 0 26px rgba(255, 190, 100, 0.55);
+}
+
+.logo-planeta::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 92px;
+  height: 20px;
+  border: 3px solid rgba(255, 214, 158, 0.6);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) rotate(-18deg);
+}
+
+.marca-texto h1 {
+  font-size: clamp(26px, 5.5vw, 38px);
+  letter-spacing: 3px;
+  line-height: 1.1;
+  background: linear-gradient(90deg, var(--neon-cian), var(--neon-magenta), var(--oro));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 30px rgba(180, 100, 255, 0.35);
+}
+
+.subtitulo {
+  margin-top: 4px;
+  color: var(--texto-atenuado);
+  font-size: 13.5px;
+  line-height: 1.4;
+}
+
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--espacio-2);
+  width: 100%;
+}
+
+.leyenda-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px var(--espacio-3);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--borde-neon-suave);
+  font-size: 12.5px;
+  color: var(--neon-violeta);
+}
+
+.leyenda-item .icono {
+  font-size: 14px;
+}
+
+.controles {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(180, 140, 255, 0.16);
+  border-radius: 14px;
+  padding: 14px 18px;
+}
+
+.control-fila {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-3);
+  font-size: var(--texto-xs);
+  color: #ded6f4;
+  text-align: left;
+}
+
+.teclas {
+  display: flex;
+  gap: var(--espacio-1);
+  flex-shrink: 0;
+  min-width: 78px;
+}
+
+.icono-touch {
+  font-size: 16px;
+  min-width: 78px;
+}
+
+kbd {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 5px;
+  padding: 2px 7px;
+  font-family: inherit;
+  font-size: 12px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15) inset;
+}
+
+.record {
+  color: var(--neon-cian);
+  font-size: var(--texto-xs);
+}
+
+.fila-botones-menu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espacio-3);
+}
+
+/* .boton-icono (definido en design/componentes.css) usado aquí con tamaño de menú */
+#btn-tienda,
+#btn-ajustes,
+#btn-cuenta,
+#btn-ranking {
+  width: 54px;
+  height: 54px;
+  font-size: 24px;
+}
+
+.mejoras-listas {
+  font-size: 12.5px;
+  color: var(--neon-cian);
+  min-height: 16px;
+}
+
+/* ---------- Tienda ---------- */
+
+.panel-tienda {
+  max-height: 86vh;
+}
+
+.saldo-tienda {
+  font-size: var(--texto-lg);
+  font-weight: var(--peso-bold);
+  color: var(--oro);
+  text-shadow: 0 0 16px rgba(255, 210, 100, 0.4);
+}
+
+.tienda-lista {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 42vh;
+  overflow-y: auto;
+  padding-right: var(--espacio-1);
+}
+
+.tienda-lista.oculto {
+  display: none;
+}
+
+.motivo {
+  color: #ff9ecf;
+  font-size: var(--texto-sm);
+  min-height: 20px;
+}
+
+.resumen {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(180, 140, 255, 0.16);
+  border-radius: 14px;
+  padding: 6px var(--espacio-4);
+}
+
+.resumen-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  font-size: var(--texto-sm);
+  color: var(--texto-atenuado);
+}
+
+.resumen-fila + .resumen-fila {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.resumen-fila span:last-child {
+  color: var(--oro);
+  font-weight: var(--peso-bold);
+  font-size: var(--texto-md);
+}
+
+@media (max-width: 480px) {
+  .corazon { font-size: 20px; }
+  #puntuacion { font-size: 18px; }
+  .panel { padding: 28px 22px; }
+  .marca { gap: var(--espacio-3); }
+  .logo-planeta { width: 46px; height: 46px; }
+  .boton-principal { padding: 12px 34px; font-size: var(--texto-sm); }
+  #btn-tienda, #btn-ajustes, #btn-cuenta, #btn-ranking { width: 46px; height: 46px; font-size: 20px; }
+  .tienda-lista { max-height: 34vh; }
+}
