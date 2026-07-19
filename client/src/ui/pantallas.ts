@@ -6,6 +6,7 @@ const IDS_PANTALLA = [
   'pantalla-ajustes',
   'pantalla-cuenta',
   'pantalla-ranking',
+  'pantalla-niveles',
 ] as const;
 
 /** Muestra la pantalla (overlay) con ese id y oculta el resto. `null` las oculta todas. */

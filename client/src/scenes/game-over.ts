@@ -9,8 +9,18 @@ export interface DatosGameOver {
   mejorPuntuacion: number;
 }
 
+export interface ResultadoNivel {
+  completado: boolean;
+  estrellas: number;
+}
+
 export interface PantallaGameOver {
   mostrar(datos: DatosGameOver): void;
+  /** Feedback de nivel (Fase 5), llega en segundo plano tras `POST
+   * /partidas` — la pantalla ya está mostrada cuando esto se resuelve, así
+   * que sólo actualiza un texto simple; no hay diseño elaborado para esto
+   * todavía (queda pendiente para una fase posterior). */
+  mostrarResultadoNivel(resultado: ResultadoNivel | null): void;
 }
 
 const MOTIVOS: Record<CausaMuerte, string> = {
@@ -27,6 +37,7 @@ export function crearPantallaGameOver(onReintentar: () => void, onMenuPrincipal:
   const puntuacionEl = document.getElementById('puntuacion-final')!;
   const tiempoEl = document.getElementById('tiempo-final')!;
   const recordEl = document.getElementById('record-final')!;
+  const resultadoNivelEl = document.getElementById('resultado-nivel')!;
 
   return {
     mostrar(datos: DatosGameOver): void {
@@ -34,7 +45,17 @@ export function crearPantallaGameOver(onReintentar: () => void, onMenuPrincipal:
       puntuacionEl.textContent = String(datos.puntuacion);
       tiempoEl.textContent = formatearTiempo(datos.tiempoJugado);
       recordEl.textContent = String(datos.mejorPuntuacion);
+      resultadoNivelEl.textContent = '';
+      resultadoNivelEl.classList.add('oculto');
       mostrarPantalla('pantalla-gameover');
+    },
+    mostrarResultadoNivel(resultado: ResultadoNivel | null): void {
+      if (!resultado) return;
+      const estrellas = '⭐'.repeat(resultado.estrellas) + '☆'.repeat(3 - resultado.estrellas);
+      resultadoNivelEl.textContent = resultado.completado
+        ? `¡Nivel completado! ${estrellas}`
+        : `Objetivo no alcanzado todavía. ${estrellas}`;
+      resultadoNivelEl.classList.remove('oculto');
     },
   };
 }

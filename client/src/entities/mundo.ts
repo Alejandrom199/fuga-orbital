@@ -30,4 +30,9 @@ export interface EstadoMundo {
 
   vidas: number;
   player: Jugador;
+
+  /** PRNG del trazado (Fase 5): `mulberry32(preset.semilla)` sembrado si el
+   * preset activo trae `semilla`, `Math.random` en modo endless. Vive en el
+   * mundo (no a nivel de módulo) porque se reinicia en cada `iniciarPartida`. */
+  rng: () => number;
 }

@@ -65,6 +65,15 @@ export const PRESET_ENDLESS: PresetJuego = {
   landingTolerance: 64,
 };
 
+/** Combina el `config` (jsonb, parcial) de un nivel del servidor con el
+ * preset endless como base: los niveles sólo sobreescriben los campos que
+ * varían la dificultad (velocidad, gaps, semilla…), el resto de constantes
+ * físicas (salto, tamaño del jugador, etc.) son las mismas para todo el
+ * juego. Mismo motor para endless y niveles (Fase 5), sólo cambia el preset. */
+export function presetDesdeNivel(config: Partial<PresetJuego>): PresetJuego {
+  return { ...PRESET_ENDLESS, ...config };
+}
+
 export type MejoraId = 'vidas' | 'iman' | 'salto' | 'multiplicador';
 export type CosmeticoId = 'gorra' | 'gafas' | 'capa' | 'antena' | 'bufanda' | 'corona';
 

@@ -17,8 +17,10 @@ export const COIN_TYPES: TipoMoneda[] = [
   },
 ];
 
-export function elegirMoneda(): TipoMoneda {
-  const r = Math.random();
+/** `azar` inyectable (Fase 5) igual que `rand()` en `render/util.ts`: por
+ * defecto `Math.random`, el spawner pasa el PRNG sembrado cuando aplica. */
+export function elegirMoneda(azar: () => number = Math.random): TipoMoneda {
+  const r = azar();
   let acc = 0;
   for (const c of COIN_TYPES) {
     acc += c.peso;

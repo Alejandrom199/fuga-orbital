@@ -6,6 +6,7 @@ import { crearPantallaTienda } from './tienda';
 import { crearPantallaAjustes } from './ajustes';
 import { crearPantallaCuenta } from './cuenta';
 import { crearPantallaRanking } from './ranking';
+import { crearPantallaNiveles } from './seleccion-niveles';
 import type { Escena } from '../core/scene-manager';
 import type { ContextoJuego } from '../core/contexto';
 
@@ -42,12 +43,14 @@ export function crearEscenaMenu(contexto: ContextoJuego): Escena {
   const ajustes = crearPantallaAjustes(contexto, volverAlInicio);
   const cuenta = crearPantallaCuenta(contexto, volverAlInicio);
   const ranking = crearPantallaRanking(contexto, volverAlInicio);
+  const niveles = crearPantallaNiveles(contexto, volverAlInicio);
 
   document.getElementById('btn-jugar')!.addEventListener('click', () => gestor.cambiar('juego'));
   document.getElementById('btn-tienda')!.addEventListener('click', () => tienda.abrir());
   document.getElementById('btn-ajustes')!.addEventListener('click', () => ajustes.abrir());
   document.getElementById('btn-cuenta')!.addEventListener('click', () => cuenta.abrir());
   document.getElementById('btn-ranking')!.addEventListener('click', () => ranking.abrir());
+  document.getElementById('btn-niveles')!.addEventListener('click', () => niveles.abrir());
 
   return {
     enter(): void {

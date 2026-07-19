@@ -196,7 +196,8 @@ kbd {
 #btn-tienda,
 #btn-ajustes,
 #btn-cuenta,
-#btn-ranking {
+#btn-ranking,
+#btn-niveles {
   width: 54px;
   height: 54px;
   font-size: 24px;
@@ -278,6 +279,6 @@ kbd {
   .marca { gap: var(--espacio-3); }
   .logo-planeta { width: 46px; height: 46px; }
   .boton-principal { padding: 12px 34px; font-size: var(--texto-sm); }
-  #btn-tienda, #btn-ajustes, #btn-cuenta, #btn-ranking { width: 46px; height: 46px; font-size: 20px; }
+  #btn-tienda, #btn-ajustes, #btn-cuenta, #btn-ranking, #btn-niveles { width: 46px; height: 46px; font-size: 20px; }
   .tienda-lista { max-height: 34vh; }
 }

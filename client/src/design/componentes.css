@@ -447,3 +447,86 @@
   color: var(--neon-cian);
   flex-shrink: 0;
 }
+
+/* ============================================================
+ * Tarjeta de nivel (Fase 5)
+ * Uso: pantalla-niveles — una fila por nivel dentro de .tienda-lista.
+ * Número de orden, nombre, 0-3 estrellas en oro; si `desbloqueado===false`
+ * se marca `.bloqueada` (candado, sin cursor de click).
+ * <div class="tarjeta-nivel"><div class="tarjeta-nivel-num">1</div>...
+ * ============================================================ */
+.tarjeta-nivel {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--borde-neon-suave);
+  border-radius: 14px;
+  padding: 10px var(--espacio-4);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+  min-height: var(--touch-minimo);
+}
+
+.tarjeta-nivel:hover {
+  background: rgba(180, 140, 255, 0.14);
+  transform: translateY(-1px);
+}
+
+.tarjeta-nivel-num {
+  font-size: var(--texto-lg);
+  font-weight: var(--peso-bold);
+  color: var(--neon-cian);
+  width: 34px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.tarjeta-nivel-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.tarjeta-nivel-nombre {
+  font-size: var(--texto-xs);
+  font-weight: var(--peso-bold);
+  color: var(--texto-principal);
+}
+
+.tarjeta-nivel-estrellas {
+  font-size: var(--texto-sm);
+  color: var(--oro);
+  text-shadow: 0 0 var(--glow-suave) rgba(255, 210, 100, 0.5);
+  margin-top: 2px;
+  letter-spacing: 2px;
+}
+
+.tarjeta-nivel-candado {
+  flex-shrink: 0;
+  font-size: 20px;
+  opacity: 0.75;
+}
+
+.tarjeta-nivel.bloqueada {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.tarjeta-nivel.bloqueada:hover {
+  background: rgba(255, 255, 255, 0.04);
+  transform: none;
+}
+
+/* ============================================================
+ * Resultado de nivel (Fase 5)
+ * Uso: pantalla-gameover — texto simple con el resultado del objetivo del
+ * nivel (completado/no + estrellas), llega en segundo plano tras el POST
+ * /partidas. Sin diseño elaborado todavía (queda para una fase posterior).
+ * ============================================================ */
+.resultado-nivel {
+  color: var(--oro);
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-bold);
+  min-height: 20px;
+}

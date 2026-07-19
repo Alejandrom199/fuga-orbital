@@ -1,6 +1,6 @@
 import { crearJugador, saltar as saltarJugador } from '../entities/jugador';
 import type { EstadoMundo } from '../entities/mundo';
-import { reiniciarMundo, actualizarSpawns } from '../systems/spawner';
+import { reiniciarMundo, actualizarSpawns, mulberry32 } from '../systems/spawner';
 import { actualizarJugador, actualizarEnemigos, actualizarMonedas } from '../systems/colisiones';
 import type { CausaMuerte } from '../systems/colisiones';
 import { actualizarDificultad, puntuacionTotal } from '../systems/dificultad';
@@ -16,6 +16,7 @@ import { actualizarVidas, actualizarPuntuacion, actualizarTiempo } from '../ui/h
 import { mostrarPantalla } from '../ui/pantallas';
 import { guardarPerfil, guardarMejorPuntuacion } from '../services/storage';
 import { enviarPartida } from '../services/api';
+import type { DatosPartida } from '../services/api';
 import { MEJORAS, BONUS_VIDAS, BONUS_SALTO, VIDAS_BASE } from '../data/config';
 import type { MejoraId, PresetJuego } from '../data/config';
 import { configurarInput } from '../core/input';
@@ -30,6 +31,18 @@ export interface EscenaJuego extends Escena {
   /** Pausa sólo si hay una partida en curso; a diferencia de alternarPausa()
    * nunca reanuda (se usa cuando el dispositivo gira a vertical). */
   pausarPorRotacion(): void;
+}
+
+/** Parámetros que recibe `gestor.cambiar('juego', params)` para jugar un
+ * nivel en vez de endless (Fase 5): mismo motor, sólo cambia el preset y
+ * cómo se reporta la partida al terminar. Sin params = endless (por defecto). */
+export interface ParametrosNivel {
+  nivelId: number;
+  preset: PresetJuego;
+}
+
+function esParametrosNivel(params: unknown): params is ParametrosNivel {
+  return !!params && typeof params === 'object' && 'nivelId' in params && 'preset' in params;
 }
 
 function crearEstadoInicial(preset: PresetJuego, trainBaseY: number): EstadoMundo {
@@ -48,14 +61,23 @@ function crearEstadoInicial(preset: PresetJuego, trainBaseY: number): EstadoMund
     shakeTimer: 0,
     vidas: 0,
     player: crearJugador(preset, trainBaseY),
+    // Trazado determinista (Fase 5): PRNG sembrado si el preset trae
+    // `semilla` (niveles); `Math.random` normal en endless.
+    rng: preset.semilla !== undefined ? mulberry32(preset.semilla) : Math.random,
   };
 }
 
 export function crearEscenaJuego(contexto: ContextoJuego): EscenaJuego {
-  const { perfil, registro, gestor, preset, canvas, sesion } = contexto;
+  const { perfil, registro, gestor, canvas, sesion } = contexto;
+
+  // Preset activo de la partida en curso: `contexto.preset` (endless) por
+  // defecto, o el del nivel recibido en `enter(params)`. `nivelActivo` es el
+  // id de nivel cuando corresponde reportar `modo:'nivel'` al terminar.
+  let presetActivo: PresetJuego = contexto.preset;
+  let nivelActivo: number | null = null;
 
   let estadoPartida: EstadoPartida = 'gameover';
-  let mundo: EstadoMundo = crearEstadoInicial(preset, 0);
+  let mundo: EstadoMundo = crearEstadoInicial(presetActivo, 0);
   let efectosActivos: Record<MejoraId, boolean> = { vidas: false, iman: false, salto: false, multiplicador: false };
 
   function vidasMax(): number {
@@ -84,14 +106,35 @@ export function crearEscenaJuego(contexto: ContextoJuego): EscenaJuego {
   // plano — nunca bloquea el game-over ni afecta el guardado local, que
   // sigue siendo la fuente de verdad (offline-first). `enviarPartida` nunca
   // rechaza (ver services/api.ts), así que no hace falta atrapar errores aquí.
+  //
+  // Fase 5: si la partida fue de un nivel (`nivelActivo` no nulo) se reporta
+  // `modo:'nivel'` + `nivelId` en vez de `modo:'endless'`; el servidor
+  // evalúa el objetivo y devuelve estrellas/completado, que se muestran (en
+  // segundo plano, la pantalla de game-over ya está abierta) con un texto
+  // simple — sin diseño elaborado todavía.
   function sincronizarPartidaConServidor(total: number): void {
     if (!sesion.usuario) return;
-    void enviarPartida({
-      modo: 'endless',
-      puntos: total,
-      monedasGanadas: mundo.monedasScore,
-      duracionS: Math.max(1, Math.round(mundo.tiempoJugado)),
-      mejorasUsadas: efectosActivos,
+    const datos: DatosPartida =
+      nivelActivo !== null
+        ? {
+            modo: 'nivel',
+            nivelId: nivelActivo,
+            puntos: total,
+            monedasGanadas: mundo.monedasScore,
+            duracionS: Math.max(1, Math.round(mundo.tiempoJugado)),
+            mejorasUsadas: efectosActivos,
+          }
+        : {
+            modo: 'endless',
+            puntos: total,
+            monedasGanadas: mundo.monedasScore,
+            duracionS: Math.max(1, Math.round(mundo.tiempoJugado)),
+            mejorasUsadas: efectosActivos,
+          };
+    void enviarPartida(datos).then((resultado) => {
+      if (resultado.ok && resultado.datos.nivelCompletado) {
+        pantallaGameOver.mostrarResultadoNivel(resultado.datos.nivelCompletado);
+      }
     });
   }
 
@@ -122,14 +165,14 @@ export function crearEscenaJuego(contexto: ContextoJuego): EscenaJuego {
     if (!destino) destino = mundo.plataformas[mundo.plataformas.length - 1] ?? null;
     if (!destino) return;
 
-    const objetivoX = Math.max(destino.x1 + 40, mundo.cameraX + preset.playerScreenX);
+    const objetivoX = Math.max(destino.x1 + 40, mundo.cameraX + presetActivo.playerScreenX);
     mundo.player.worldX = Math.min(objetivoX, destino.x2 - 40);
-    mundo.player.y = destino.topY - preset.playerH / 2;
+    mundo.player.y = destino.topY - presetActivo.playerH / 2;
     mundo.player.vy = 0;
     mundo.player.grounded = true;
-    mundo.player.jumpsRemaining = preset.maxJumps;
+    mundo.player.jumpsRemaining = presetActivo.maxJumps;
     mundo.player.hitStunTimer = 0;
-    mundo.player.invulnTimer = preset.invulnTime;
+    mundo.player.invulnTimer = presetActivo.invulnTime;
   }
 
   // Convierte lo preparado en la tienda en efectos de la partida: gasta una
@@ -151,10 +194,10 @@ export function crearEscenaJuego(contexto: ContextoJuego): EscenaJuego {
   function iniciarPartida(): void {
     consumirMejorasPreparadas();
     const { W, trainBaseY } = contexto.obtenerDimensiones();
-    mundo = crearEstadoInicial(preset, trainBaseY);
+    mundo = crearEstadoInicial(presetActivo, trainBaseY);
     mundo.vidas = vidasMax();
     actualizarHUDVidas();
-    reiniciarMundo(mundo, preset, W, trainBaseY);
+    reiniciarMundo(mundo, presetActivo, W, trainBaseY);
     estadoPartida = 'jugando';
     mostrarPantalla(null);
   }
@@ -177,7 +220,7 @@ export function crearEscenaJuego(contexto: ContextoJuego): EscenaJuego {
   function saltar(): void {
     if (estadoPartida !== 'jugando') return;
     const boost = efectosActivos.salto ? BONUS_SALTO : 0;
-    saltarJugador(mundo.player, preset, boost);
+    saltarJugador(mundo.player, presetActivo, boost);
   }
 
   const pantallaPausa = crearPantallaPausa(alternarPausa, volverAlMenuPrincipal);
@@ -191,9 +234,9 @@ export function crearEscenaJuego(contexto: ContextoJuego): EscenaJuego {
     const parpadeo = player.invulnTimer > 0 && Math.floor(mundo.tiempoJugado * 14) % 2 === 0;
     if (parpadeo) return;
     ctx.save();
-    ctx.translate(sx, player.y + preset.playerH / 2);
+    ctx.translate(sx, player.y + presetActivo.playerH / 2);
     ctx.scale(2 - player.squash, player.squash);
-    dibujarPersonaje(ctx, preset.playerW, preset.playerH, {
+    dibujarPersonaje(ctx, presetActivo.playerW, presetActivo.playerH, {
       t: mundo.tiempoJugado,
       grounded: player.grounded,
       faseCarrera: player.worldX * 0.05,
@@ -203,7 +246,17 @@ export function crearEscenaJuego(contexto: ContextoJuego): EscenaJuego {
   }
 
   return {
-    enter(): void {
+    enter(params?: unknown): void {
+      // Fase 5: `gestor.cambiar('juego', { nivelId, preset })` desde
+      // `scenes/seleccion-niveles.ts` juega ese nivel con el mismo motor;
+      // sin params (p. ej. `btn-jugar` del menú) es el endless de siempre.
+      if (esParametrosNivel(params)) {
+        presetActivo = params.preset;
+        nivelActivo = params.nivelId;
+      } else {
+        presetActivo = contexto.preset;
+        nivelActivo = null;
+      }
       iniciarPartida();
     },
 
@@ -212,11 +265,11 @@ export function crearEscenaJuego(contexto: ContextoJuego): EscenaJuego {
       const { W, trainBaseY } = contexto.obtenerDimensiones();
 
       mundo.tiempoJugado += dt;
-      actualizarDificultad(mundo, dt, preset);
-      actualizarSpawns(mundo, preset, W, trainBaseY);
-      actualizarJugador(mundo, dt, preset, trainBaseY, perderVida);
+      actualizarDificultad(mundo, dt, presetActivo);
+      actualizarSpawns(mundo, presetActivo, W, trainBaseY);
+      actualizarJugador(mundo, dt, presetActivo, trainBaseY, perderVida);
       if (estadoPartida !== 'jugando') return;
-      actualizarEnemigos(mundo, dt, preset, perderVida);
+      actualizarEnemigos(mundo, dt, presetActivo, perderVida);
       actualizarMonedas(mundo, efectosActivos);
       actualizarTextosFlotantes(mundo, dt);
       actualizarShake(mundo, dt);
@@ -232,7 +285,7 @@ export function crearEscenaJuego(contexto: ContextoJuego): EscenaJuego {
         ctx.translate((Math.random() - 0.5) * 10 * mundo.shakeTimer, (Math.random() - 0.5) * 10 * mundo.shakeTimer);
       }
       dibujarFondo({ ctx, W, H, cameraX: mundo.cameraX, tiempoJugado: mundo.tiempoJugado });
-      dibujarVagones(ctx, mundo.plataformas, mundo.cameraX, W, preset, mundo.tiempoJugado);
+      dibujarVagones(ctx, mundo.plataformas, mundo.cameraX, W, presetActivo, mundo.tiempoJugado);
       dibujarMonedas(ctx, mundo.monedas, mundo.cameraX, W, mundo.tiempoJugado);
       dibujarEnemigos(ctx, mundo.enemigos, mundo.cameraX, W, mundo.tiempoJugado);
       dibujarJugadorEnPantalla(ctx);

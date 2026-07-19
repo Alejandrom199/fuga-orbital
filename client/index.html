@@ -61,6 +61,7 @@
           <button id="btn-ajustes" class="boton-icono" aria-label="Ajustes" type="button">⚙️</button>
           <button id="btn-cuenta" class="boton-icono" aria-label="Cuenta" type="button">👤</button>
           <button id="btn-ranking" class="boton-icono" aria-label="Ranking" type="button">🏆</button>
+          <button id="btn-niveles" class="boton-icono" aria-label="Niveles" type="button">🗺️</button>
         </div>
         <p class="mejoras-listas" id="mejoras-listas"></p>
         <p class="record">Mejor puntuación &middot; <span id="record-inicio">0</span> &middot; 🪙 <span id="saldo-inicio">0</span></p>
@@ -85,6 +86,7 @@
           <div class="resumen-fila"><span>Tiempo sobrevivido</span><span id="tiempo-final">00:00</span></div>
           <div class="resumen-fila"><span>Mejor puntuación</span><span id="record-final">0</span></div>
         </div>
+        <p id="resultado-nivel" class="resultado-nivel oculto"></p>
         <button id="btn-reintentar" class="boton-principal">Reintentar</button>
         <button id="btn-menu-principal-gameover" class="boton-secundario" type="button">Menú principal</button>
       </div>
@@ -146,6 +148,15 @@
         <p id="ranking-estado" class="motivo oculto"></p>
         <div id="ranking-lista" class="tienda-lista"></div>
         <button id="btn-cerrar-ranking" class="boton-principal">Volver</button>
+      </div>
+    </div>
+
+    <div id="pantalla-niveles" class="pantalla oculto">
+      <div class="panel panel-tienda">
+        <h2>Niveles</h2>
+        <p id="niveles-estado" class="motivo oculto"></p>
+        <div id="niveles-lista" class="tienda-lista niveles-lista"></div>
+        <button id="btn-cerrar-niveles" class="boton-principal">Volver</button>
       </div>
     </div>
   </div>

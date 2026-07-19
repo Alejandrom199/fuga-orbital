@@ -17,8 +17,11 @@ export function trazarRectRedondeado(
   ctx.closePath();
 }
 
-export function rand(min: number, max: number): number {
-  return min + Math.random() * (max - min);
+/** `azar` es inyectable (Fase 5): por defecto `Math.random`, pero el spawner
+ * pasa el PRNG sembrado (`mulberry32`) cuando el preset activo trae `semilla`
+ * para que el trazado de un nivel sea idéntico entre intentos. */
+export function rand(min: number, max: number, azar: () => number = Math.random): number {
+  return min + azar() * (max - min);
 }
 
 export function clamp(v: number, min: number, max: number): number {

@@ -1,4 +1,4 @@
-import type { MejoraId, CosmeticoId } from '../data/config';
+import type { MejoraId, CosmeticoId, PresetJuego } from '../data/config';
 
 // Capa de acceso al backend (Fase 3). Offline-first: cualquier error de red
 // o de servidor se atrapa aquí y se devuelve como resultado tipado, nunca se
@@ -132,4 +132,34 @@ export interface FilaRanking {
 
 export function obtenerRanking(limite = 20): Promise<ResultadoApi<{ ranking: FilaRanking[] }>> {
   return peticion<{ ranking: FilaRanking[] }>(`/ranking?limite=${limite}`);
+}
+
+// ---------- Niveles ----------
+
+export interface ObjetivoNivel {
+  tipo: 'distancia' | 'monedas' | 'sobrevivir_s';
+  valor: number;
+}
+
+export interface NivelApi {
+  id: number;
+  orden: number;
+  nombre: string;
+  /** Preset parcial (jsonb): sólo los campos que ese nivel varía respecto al
+   * endless, + `semilla` opcional para el trazado determinista. Se completa
+   * con `presetDesdeNivel()` (`data/config.ts`) antes de jugarlo. */
+  config: Partial<PresetJuego>;
+  objetivo: ObjetivoNivel;
+  desbloqueado: boolean;
+  completado: boolean;
+  estrellas: number;
+  mejorPuntuacion: number;
+  intentos: number;
+}
+
+/** Requiere sesión para tener sentido (el progreso vive en el servidor), pero
+ * el propio endpoint acepta llamarse sin cookie (`autenticarOpcional`) — el
+ * llamador (`scenes/seleccion-niveles.ts`) decide no invocarla sin sesión. */
+export function obtenerNiveles(): Promise<ResultadoApi<{ niveles: NivelApi[] }>> {
+  return peticion<{ niveles: NivelApi[] }>('/niveles');
 }

@@ -18,8 +18,8 @@ export function mulberry32(semilla: number): () => number {
   };
 }
 
-function anchoAleatorioVagon(preset: PresetJuego): number {
-  return rand(preset.carMinW, preset.carMaxW);
+function anchoAleatorioVagon(preset: PresetJuego, azar: () => number): number {
+  return rand(preset.carMinW, preset.carMaxW, azar);
 }
 
 function maxHuecoSaltable(preset: PresetJuego, worldSpeed: number): number {
@@ -28,9 +28,10 @@ function maxHuecoSaltable(preset: PresetJuego, worldSpeed: number): number {
 }
 
 function crearVagon(estado: EstadoMundo, preset: PresetJuego, trainBaseY: number, startX: number): Vagon {
-  const w = anchoAleatorioVagon(preset);
+  const azar = estado.rng;
+  const w = anchoAleatorioVagon(preset, azar);
   estado.ultimoTopY = clamp(
-    estado.ultimoTopY + rand(-preset.topYVariance, preset.topYVariance),
+    estado.ultimoTopY + rand(-preset.topYVariance, preset.topYVariance, azar),
     trainBaseY - 70,
     trainBaseY + 70,
   );
@@ -38,32 +39,32 @@ function crearVagon(estado: EstadoMundo, preset: PresetJuego, trainBaseY: number
     x1: startX,
     x2: startX + w,
     topY: estado.ultimoTopY,
-    tinte: Math.floor(rand(0, 40)),
+    tinte: Math.floor(rand(0, 40, azar)),
   };
   estado.plataformas.push(car);
 
   // Monedas sobre el vagón
-  if (Math.random() < 0.4 && w > 160) {
-    const n = Math.floor(rand(1, 3));
+  if (azar() < 0.4 && w > 160) {
+    const n = Math.floor(rand(1, 3, azar));
     const margen = 40;
     for (let i = 0; i < n; i++) {
       const cx = startX + margen + (w - margen * 2) * (n === 1 ? 0.5 : i / (n - 1));
-      const tipo = elegirMoneda();
-      estado.monedas.push({ x: cx, y: car.topY - 78 - Math.sin(i) * 10, tipo, fase: Math.random() * Math.PI * 2, tomada: false });
+      const tipo = elegirMoneda(azar);
+      estado.monedas.push({ x: cx, y: car.topY - 78 - Math.sin(i) * 10, tipo, fase: azar() * Math.PI * 2, tomada: false });
     }
   }
 
   // Enemigo sobre el vagón
   const pEnemigo = clamp(0.16 + estado.tiempoJugado * 0.008, 0.16, 0.55);
-  if (w > 200 && Math.random() < pEnemigo) {
-    const def = ENEMY_SPRITES[Math.floor(Math.random() * ENEMY_SPRITES.length)]!;
+  if (w > 200 && azar() < pEnemigo) {
+    const def = ENEMY_SPRITES[Math.floor(azar() * ENEMY_SPRITES.length)]!;
     const margen = def.w / 2 + 20;
     const centro = startX + w / 2;
     estado.enemigos.push({
       def,
       x: centro,
       y: car.topY - def.h / 2,
-      dir: Math.random() < 0.5 ? 1 : -1,
+      dir: azar() < 0.5 ? 1 : -1,
       minX: Math.max(startX + margen, centro - w / 2 + margen),
       maxX: Math.min(startX + w - margen, centro + w / 2 - margen),
       vivo: true,
@@ -79,7 +80,7 @@ export function reiniciarMundo(estado: EstadoMundo, preset: PresetJuego, W: numb
   estado.plataformas.push({ x1: -400, x2: 480, topY: trainBaseY, tinte: 0 });
   estado.nextSpawnX = 480;
   while (estado.nextSpawnX < W + 700) {
-    const gap = rand(preset.gapMin, Math.min(preset.gapMaxAbs, maxHuecoSaltable(preset, estado.worldSpeed)));
+    const gap = rand(preset.gapMin, Math.min(preset.gapMaxAbs, maxHuecoSaltable(preset, estado.worldSpeed)), estado.rng);
     estado.nextSpawnX += gap;
     const car = crearVagon(estado, preset, trainBaseY, estado.nextSpawnX);
     estado.nextSpawnX = car.x2;
@@ -88,7 +89,7 @@ export function reiniciarMundo(estado: EstadoMundo, preset: PresetJuego, W: numb
 
 export function actualizarSpawns(estado: EstadoMundo, preset: PresetJuego, W: number, trainBaseY: number): void {
   while (estado.nextSpawnX < estado.cameraX + W + 700) {
-    const gap = rand(preset.gapMin, Math.min(preset.gapMaxAbs, maxHuecoSaltable(preset, estado.worldSpeed)));
+    const gap = rand(preset.gapMin, Math.min(preset.gapMaxAbs, maxHuecoSaltable(preset, estado.worldSpeed)), estado.rng);
     estado.nextSpawnX += gap;
     const car = crearVagon(estado, preset, trainBaseY, estado.nextSpawnX);
     estado.nextSpawnX = car.x2;
