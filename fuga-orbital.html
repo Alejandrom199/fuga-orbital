@@ -1,0 +1,2741 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Fuga Orbital — Salta sobre los trenes</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #05010f;
+  font-family: 'Segoe UI', Verdana, Arial, sans-serif;
+  touch-action: none;
+}
+
+#juego {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+#lienzo {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* HUD */
+
+#hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px 20px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+#vidas {
+  display: flex;
+  gap: 8px;
+}
+
+.corazon {
+  font-size: 26px;
+  filter: drop-shadow(0 0 4px rgba(255, 60, 140, 0.8));
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.corazon.perdido {
+  opacity: 0.25;
+  transform: scale(0.8);
+  filter: none;
+}
+
+#stats {
+  text-align: right;
+  color: #eaf6ff;
+  text-shadow: 0 0 6px rgba(0, 220, 255, 0.6);
+}
+
+#puntuacion {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+#tiempo {
+  font-size: 15px;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+#barra-superior {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#btn-pausa, #btn-fullscreen {
+  background: rgba(20, 10, 40, 0.55);
+  color: #eaf6ff;
+  border: 1px solid rgba(180, 120, 255, 0.5);
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  backdrop-filter: blur(3px);
+}
+
+#btn-pausa {
+  padding: 6px 14px;
+}
+
+#btn-fullscreen {
+  width: 38px;
+  height: 34px;
+  font-size: 17px;
+  line-height: 1;
+}
+
+#btn-pausa:hover, #btn-fullscreen:hover {
+  background: rgba(180, 120, 255, 0.35);
+}
+
+#btn-fullscreen:hover {
+  background: rgba(180, 120, 255, 0.35);
+}
+
+/* Aviso de girar el dispositivo */
+
+#aviso-rotar {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: #05010f;
+  color: #f2ecff;
+  text-align: center;
+  padding: 32px;
+}
+
+#aviso-rotar.visible {
+  display: flex;
+}
+
+.rotar-icono {
+  font-size: 64px;
+  animation: rotar-girar 1.6s ease-in-out infinite;
+}
+
+@keyframes rotar-girar {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(90deg); }
+}
+
+#aviso-rotar p {
+  font-size: 16px;
+  max-width: 320px;
+  color: #dcd2f7;
+}
+
+/* Pantallas overlay */
+
+.pantalla {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: #f2ecff;
+  background: rgba(6, 2, 18, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.pantalla.oculto {
+  display: none;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  width: 100%;
+  max-width: 460px;
+  padding: 36px 34px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(38, 16, 66, 0.9), rgba(16, 6, 34, 0.94));
+  border: 1px solid rgba(180, 140, 255, 0.22);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+    0 1px 0 rgba(255, 255, 255, 0.08) inset;
+  animation: panel-entrada 0.35s ease both;
+}
+
+@keyframes panel-entrada {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
+}
+
+.logo-planeta {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #ffedc7, #ffb85e 55%, #a9701c 100%);
+  box-shadow: 0 0 26px rgba(255, 190, 100, 0.55);
+}
+
+.logo-planeta::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 92px;
+  height: 20px;
+  border: 3px solid rgba(255, 214, 158, 0.6);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) rotate(-18deg);
+}
+
+.marca-texto h1 {
+  font-size: clamp(26px, 5.5vw, 38px);
+  letter-spacing: 3px;
+  line-height: 1.1;
+  background: linear-gradient(90deg, #7cf7ff, #ff7ce8, #ffe27c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 30px rgba(180, 100, 255, 0.35);
+}
+
+.panel h2 {
+  font-size: clamp(24px, 5.5vw, 34px);
+  color: #ffd27c;
+  text-shadow: 0 0 20px rgba(255, 180, 80, 0.5);
+}
+
+.subtitulo {
+  margin-top: 4px;
+  color: #c2b3ec;
+  font-size: 13.5px;
+  line-height: 1.4;
+}
+
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.leyenda-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(180, 140, 255, 0.22);
+  font-size: 12.5px;
+  color: #dcd2f7;
+}
+
+.leyenda-item .icono {
+  font-size: 14px;
+}
+
+.controles {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(180, 140, 255, 0.16);
+  border-radius: 14px;
+  padding: 14px 18px;
+}
+
+.control-fila {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: #ded6f4;
+  text-align: left;
+}
+
+.teclas {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  min-width: 78px;
+}
+
+.icono-touch {
+  font-size: 16px;
+  min-width: 78px;
+}
+
+kbd {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 5px;
+  padding: 2px 7px;
+  font-family: inherit;
+  font-size: 12px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15) inset;
+}
+
+.boton-principal {
+  background: linear-gradient(135deg, #ff7ce8, #7c9bff);
+  color: #100626;
+  border: none;
+  border-radius: 30px;
+  padding: 14px 46px;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: 0 0 25px rgba(255, 124, 232, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.boton-principal:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 0 35px rgba(124, 247, 255, 0.55);
+}
+
+.boton-principal:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.record {
+  color: #9fe8ff;
+  font-size: 13px;
+}
+
+.fila-botones-menu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.boton-tienda {
+  width: 54px;
+  height: 54px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(180, 140, 255, 0.35);
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffe27c;
+  font-size: 24px;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.boton-tienda:hover {
+  background: rgba(180, 140, 255, 0.22);
+  transform: translateY(-2px) scale(1.05);
+}
+
+.boton-secundario {
+  background: transparent;
+  color: #cabfe8;
+  border: 1px solid rgba(180, 140, 255, 0.35);
+  border-radius: 30px;
+  padding: 10px 28px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.boton-peligro {
+  color: #ff9ecf;
+  border-color: rgba(255, 90, 140, 0.4);
+}
+
+.boton-peligro:hover {
+  background: rgba(255, 90, 140, 0.16);
+  color: #ffd2e6;
+}
+
+.mejoras-listas {
+  font-size: 12.5px;
+  color: #7cf7ff;
+  min-height: 16px;
+}
+
+.boton-secundario:hover {
+  background: rgba(180, 140, 255, 0.16);
+  color: #f2ecff;
+}
+
+/* ---------- Tienda ---------- */
+
+.panel-tienda {
+  max-height: 86vh;
+}
+
+.saldo-tienda {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffe27c;
+  text-shadow: 0 0 16px rgba(255, 210, 100, 0.4);
+}
+
+.tienda-tabs {
+  display: flex;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+  padding: 4px;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  color: #cabfe8;
+  padding: 8px 20px;
+  border-radius: 999px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.tab-btn.activo {
+  background: linear-gradient(135deg, #ff7ce8, #7c9bff);
+  color: #100626;
+  font-weight: 700;
+}
+
+.tienda-lista {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 42vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.tienda-lista.oculto {
+  display: none;
+}
+
+.tienda-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(180, 140, 255, 0.18);
+  border-radius: 14px;
+  padding: 10px 14px;
+  text-align: left;
+}
+
+.tienda-item-icono {
+  font-size: 28px;
+  flex-shrink: 0;
+  width: 36px;
+  text-align: center;
+}
+
+.tienda-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.tienda-item-nombre {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f2ecff;
+}
+
+.tienda-item-desc {
+  font-size: 12px;
+  color: #ab9fc9;
+  margin-top: 1px;
+}
+
+.tienda-item-nivel {
+  font-size: 11.5px;
+  color: #7cf7ff;
+  margin-top: 3px;
+}
+
+.tienda-item-acciones {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tienda-item-btn {
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #ff7ce8, #7c9bff);
+  color: #100626;
+  border: none;
+  border-radius: 20px;
+  padding: 9px 16px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tienda-item-btn.secundario {
+  background: rgba(255, 255, 255, 0.08);
+  color: #dcd2f7;
+  border: 1px solid rgba(180, 140, 255, 0.3);
+}
+
+.tienda-item-btn.equipado {
+  background: linear-gradient(135deg, #5cff8a, #3fd0ff);
+  color: #0a2618;
+}
+
+.tienda-item-btn.maxed,
+.tienda-item-btn:disabled {
+  background: rgba(255, 255, 255, 0.08);
+  color: #7a7391;
+  cursor: default;
+}
+
+.motivo {
+  color: #ff9ecf;
+  font-size: 14px;
+  min-height: 20px;
+}
+
+.resumen {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(180, 140, 255, 0.16);
+  border-radius: 14px;
+  padding: 6px 18px;
+}
+
+.resumen-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  font-size: 14px;
+  color: #cabfe8;
+}
+
+.resumen-fila + .resumen-fila {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.resumen-fila span:last-child {
+  color: #ffe27c;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+@media (max-width: 480px) {
+  .corazon { font-size: 20px; }
+  #puntuacion { font-size: 18px; }
+  .panel { padding: 28px 22px; }
+  .marca { gap: 12px; }
+  .logo-planeta { width: 46px; height: 46px; }
+  .boton-principal { padding: 12px 34px; font-size: 15px; }
+  .boton-tienda { width: 46px; height: 46px; font-size: 20px; }
+  .tienda-lista { max-height: 34vh; }
+}
+</style>
+</head>
+<body>
+<div id="juego">
+  <canvas id="lienzo"></canvas>
+
+  <div id="hud">
+    <div id="vidas"></div>
+    <div id="stats">
+      <div id="puntuacion">0 pts</div>
+      <div id="tiempo">00:00</div>
+    </div>
+  </div>
+
+  <div id="barra-superior">
+    <button id="btn-pausa" aria-label="Pausa">❚❚</button>
+    <button id="btn-fullscreen" aria-label="Pantalla completa">⛶</button>
+  </div>
+
+  <div id="pantalla-inicio" class="pantalla">
+    <div class="panel panel-inicio">
+      <div class="marca">
+        <span class="logo-planeta" aria-hidden="true"></span>
+        <div class="marca-texto">
+          <h1>FUGA ORBITAL</h1>
+          <p class="subtitulo">Escapa saltando sobre los trenes de un planeta alienígena</p>
+        </div>
+      </div>
+
+      <div class="leyenda">
+        <div class="leyenda-item"><span class="icono">❤</span>3 vidas</div>
+        <div class="leyenda-item"><span class="icono">🪙</span>Monedas</div>
+        <div class="leyenda-item"><span class="icono">👾</span>Enemigos</div>
+        <div class="leyenda-item"><span class="icono">⏱</span>Contrarreloj</div>
+      </div>
+
+      <div class="controles">
+        <div class="control-fila">
+          <span class="teclas"><kbd>Espacio</kbd><kbd>↑</kbd></span>
+          <span>Saltar &middot; doble salto en el aire</span>
+        </div>
+        <div class="control-fila">
+          <span class="teclas"><kbd>P</kbd><kbd>Esc</kbd></span>
+          <span>Pausar la partida</span>
+        </div>
+        <div class="control-fila">
+          <span class="teclas icono-touch">👆</span>
+          <span>En móvil: toca la pantalla para saltar</span>
+        </div>
+      </div>
+
+      <div class="fila-botones-menu">
+        <button id="btn-jugar" class="boton-principal">Jugar</button>
+        <button id="btn-tienda" class="boton-tienda" aria-label="Tienda" type="button">🛒</button>
+        <button id="btn-ajustes" class="boton-tienda" aria-label="Ajustes" type="button">⚙️</button>
+      </div>
+      <p class="mejoras-listas" id="mejoras-listas"></p>
+      <p class="record">Mejor puntuación &middot; <span id="record-inicio">0</span> &middot; 🪙 <span id="saldo-inicio">0</span></p>
+    </div>
+  </div>
+
+  <div id="pantalla-pausa" class="pantalla oculto">
+    <div class="panel">
+      <h2>Pausa</h2>
+      <button id="btn-reanudar" class="boton-principal">Reanudar</button>
+      <button id="btn-menu-principal" class="boton-secundario" type="button">Menú principal</button>
+    </div>
+  </div>
+
+  <div id="pantalla-gameover" class="pantalla oculto">
+    <div class="panel">
+      <h2>¡Fin del viaje!</h2>
+      <p id="motivo-muerte" class="motivo"></p>
+      <div class="resumen">
+        <div class="resumen-fila"><span>Puntuación</span><span id="puntuacion-final">0</span></div>
+        <div class="resumen-fila"><span>Tiempo sobrevivido</span><span id="tiempo-final">00:00</span></div>
+        <div class="resumen-fila"><span>Mejor puntuación</span><span id="record-final">0</span></div>
+      </div>
+      <button id="btn-reintentar" class="boton-principal">Reintentar</button>
+      <button id="btn-menu-principal-gameover" class="boton-secundario" type="button">Menú principal</button>
+    </div>
+  </div>
+
+  <div id="pantalla-tienda" class="pantalla oculto">
+    <div class="panel panel-tienda">
+      <h2>Tienda</h2>
+      <p class="saldo-tienda">🪙 <span id="tienda-saldo">0</span></p>
+      <div class="tienda-tabs">
+        <button class="tab-btn activo" data-tab="mejoras" type="button">Mejoras</button>
+        <button class="tab-btn" data-tab="cosmeticos" type="button">Personaje</button>
+      </div>
+      <div id="tienda-lista-mejoras" class="tienda-lista"></div>
+      <div id="tienda-lista-cosmeticos" class="tienda-lista oculto"></div>
+      <button id="btn-cerrar-tienda" class="boton-principal">Volver</button>
+    </div>
+  </div>
+
+  <div id="pantalla-ajustes" class="pantalla oculto">
+    <div class="panel">
+      <h2>Ajustes</h2>
+      <p class="motivo">Esto borra tu progreso guardado: monedas, mejoras, cosméticos y mejor puntuación.</p>
+      <button id="btn-borrar-datos" class="boton-secundario boton-peligro" type="button">Borrar datos guardados</button>
+      <button id="btn-cerrar-ajustes" class="boton-principal">Volver</button>
+    </div>
+  </div>
+</div>
+
+<div id="aviso-rotar">
+  <div class="rotar-icono" aria-hidden="true">📱</div>
+  <p>Gira tu dispositivo a horizontal para jugar</p>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+// ---------- Canvas / setup ----------
+const canvas = document.getElementById('lienzo');
+const ctx = canvas.getContext('2d');
+let W = 0, H = 0, trainBaseY = 0;
+
+// Los tamaños del juego están calibrados para una ventana de ~720px de alto.
+// En móviles la altura visible es mucho menor y, al dibujar todo con los
+// mismos píxeles absolutos, se veía "acercado"/en zoom. Por eso se calcula
+// un factor de escala: en pantallas bajas se agranda el mundo lógico (W/H)
+// y se compensa al dibujar, mostrando más mundo (efecto zoom-out).
+const ALTURA_REFERENCIA = 720;
+const FACTOR_ALEJAR = 0.85;
+let escalaRender = 1;
+
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  const realW = window.innerWidth;
+  const realH = window.innerHeight;
+  escalaRender = Math.max(0.45, Math.min(1, realH / ALTURA_REFERENCIA)) * FACTOR_ALEJAR;
+  W = realW / escalaRender;
+  H = realH / escalaRender;
+  canvas.width = Math.round(realW * dpr);
+  canvas.height = Math.round(realH * dpr);
+  ctx.setTransform(dpr * escalaRender, 0, 0, dpr * escalaRender, 0, 0);
+  trainBaseY = H * 0.6;
+}
+window.addEventListener('resize', resize);
+resize();
+
+let enPortrait = false;
+const avisoRotar = document.getElementById('aviso-rotar');
+
+// ---------- Assets ----------
+// Todo el arte del juego (personaje, enemigos, monedas, paisaje) se dibuja
+// 100% por código con Canvas 2D: no se cargan imágenes externas.
+
+// Enemigos: diseños 100% procedurales (canvas), sin imagen. Cada uno define
+// su tamaño de hitbox, velocidad de patrulla y su propia función de dibujo.
+function trazarRectRedondeado(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+// El origen (0,0) de cada dibujo es el punto donde toca la plataforma (pies);
+// se dibuja hacia arriba (Y negativa).
+function dibujarRobot(w, h, t) {
+  const swing = Math.sin(t * 8) * 6;
+
+  ctx.strokeStyle = '#7d8791';
+  ctx.lineWidth = w * 0.1;
+  ctx.beginPath(); ctx.moveTo(-w * 0.16, -h * 0.34); ctx.lineTo(-w * 0.16 + swing * 0.3, -2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(w * 0.16, -h * 0.34); ctx.lineTo(w * 0.16 - swing * 0.3, -2); ctx.stroke();
+  ctx.fillStyle = '#565f68';
+  ctx.beginPath(); ctx.ellipse(-w * 0.16 + swing * 0.3, 0, w * 0.14, h * 0.045, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(w * 0.16 - swing * 0.3, 0, w * 0.14, h * 0.045, 0, 0, Math.PI * 2); ctx.fill();
+
+  const gradCuerpo = ctx.createLinearGradient(0, -h * 0.74, 0, -h * 0.3);
+  gradCuerpo.addColorStop(0, '#eef1f4');
+  gradCuerpo.addColorStop(1, '#9aa4ad');
+  ctx.fillStyle = gradCuerpo;
+  trazarRectRedondeado(-w * 0.33, -h * 0.74, w * 0.66, h * 0.46, w * 0.15);
+  ctx.fill();
+  ctx.strokeStyle = '#5c6670';
+  ctx.lineWidth = Math.max(1, w * 0.03);
+  ctx.stroke();
+
+  const headR = w * 0.3;
+  const headY = -h * 0.86;
+  const gradCabeza = ctx.createRadialGradient(-headR * 0.3, headY - headR * 0.3, headR * 0.1, 0, headY, headR);
+  gradCabeza.addColorStop(0, '#f4f7f8');
+  gradCabeza.addColorStop(1, '#b7c0c8');
+  ctx.beginPath(); ctx.arc(0, headY, headR, 0, Math.PI * 2);
+  ctx.fillStyle = gradCabeza; ctx.fill();
+  ctx.strokeStyle = '#5c6670'; ctx.stroke();
+
+  ctx.save();
+  ctx.shadowColor = '#3fd0ff';
+  ctx.shadowBlur = w * 0.25;
+  const ojoGrad = ctx.createRadialGradient(headR * 0.15, headY - headR * 0.1, headR * 0.05, headR * 0.2, headY, headR * 0.42);
+  ojoGrad.addColorStop(0, '#eafcff');
+  ojoGrad.addColorStop(0.55, '#3fd0ff');
+  ojoGrad.addColorStop(1, '#0b6f96');
+  ctx.beginPath(); ctx.arc(headR * 0.2, headY, headR * 0.42, 0, Math.PI * 2);
+  ctx.fillStyle = ojoGrad; ctx.fill();
+  ctx.restore();
+
+  ctx.strokeStyle = '#8a949d';
+  ctx.lineWidth = Math.max(1, w * 0.035);
+  ctx.beginPath(); ctx.moveTo(0, headY - headR); ctx.lineTo(0, headY - headR * 1.6); ctx.stroke();
+  ctx.beginPath(); ctx.arc(0, headY - headR * 1.7, w * 0.06, 0, Math.PI * 2);
+  ctx.fillStyle = Math.sin(t * 6) > 0 ? '#ff5d5d' : '#8a2626';
+  ctx.fill();
+}
+
+function dibujarBronce(w, h, t) {
+  const bob = Math.sin(t * 2) * 3;
+
+  ctx.strokeStyle = '#5a3218';
+  ctx.lineWidth = w * 0.085;
+  [-w * 0.34, -w * 0.12, w * 0.12, w * 0.34].forEach((px, i) => {
+    const sway = Math.sin(t * 3 + i) * 4;
+    ctx.beginPath(); ctx.moveTo(px, -h * 0.42); ctx.lineTo(px + sway * 0.4, -4); ctx.stroke();
+    ctx.fillStyle = '#3d2210';
+    ctx.beginPath();
+    ctx.moveTo(px + sway * 0.4 - w * 0.05, 0);
+    ctx.lineTo(px + sway * 0.4 + w * 0.05, 0);
+    ctx.lineTo(px + sway * 0.4, h * 0.07);
+    ctx.closePath(); ctx.fill();
+  });
+
+  const gradCuerpo = ctx.createRadialGradient(-w * 0.15, -h * 0.78, w * 0.1, 0, -h * 0.55 + bob, w * 0.55);
+  gradCuerpo.addColorStop(0, '#d69a5c');
+  gradCuerpo.addColorStop(0.6, '#8a5525');
+  gradCuerpo.addColorStop(1, '#5a3416');
+  ctx.beginPath();
+  ctx.ellipse(0, -h * 0.55 + bob, w * 0.5, h * 0.36, 0, 0, Math.PI * 2);
+  ctx.fillStyle = gradCuerpo; ctx.fill();
+  ctx.strokeStyle = '#3d2210';
+  ctx.lineWidth = Math.max(1, w * 0.018);
+  ctx.stroke();
+
+  ctx.fillStyle = '#6b3d1c';
+  for (let i = -2; i <= 2; i++) {
+    const px = i * w * 0.16;
+    ctx.beginPath();
+    ctx.moveTo(px - w * 0.05, -h * 0.82 + bob);
+    ctx.lineTo(px, -h * 0.99 + bob);
+    ctx.lineTo(px + w * 0.05, -h * 0.82 + bob);
+    ctx.closePath(); ctx.fill();
+  }
+
+  const headX = w * 0.42, headY = -h * 0.52 + bob;
+  const gradCabeza = ctx.createRadialGradient(headX - w * 0.06, headY - h * 0.06, w * 0.03, headX, headY, w * 0.28);
+  gradCabeza.addColorStop(0, '#dda062');
+  gradCabeza.addColorStop(1, '#7a4a20');
+  ctx.beginPath(); ctx.ellipse(headX, headY, w * 0.26, h * 0.2, 0, 0, Math.PI * 2);
+  ctx.fillStyle = gradCabeza; ctx.fill();
+  ctx.strokeStyle = '#3d2210'; ctx.stroke();
+
+  ctx.save();
+  ctx.shadowColor = '#5cff8a';
+  ctx.shadowBlur = 6;
+  ctx.fillStyle = '#8bffb0';
+  [[-w * 0.05, -h * 0.05], [w * 0.03, -h * 0.08], [w * 0.1, -h * 0.03]].forEach(([dx, dy]) => {
+    ctx.beginPath(); ctx.arc(headX + dx, headY + dy, w * 0.035, 0, Math.PI * 2); ctx.fill();
+  });
+  ctx.restore();
+
+  ctx.fillStyle = '#3d2210';
+  ctx.beginPath();
+  ctx.moveTo(headX + w * 0.2, headY + h * 0.05);
+  ctx.lineTo(headX + w * 0.34, headY + h * 0.03);
+  ctx.lineTo(headX + w * 0.22, headY + h * 0.13);
+  ctx.closePath(); ctx.fill();
+}
+
+function dibujarVerde(w, h, t) {
+  const hop = Math.abs(Math.sin(t * 4)) * 6;
+
+  ctx.fillStyle = '#3d6b3a';
+  [-w * 0.28, w * 0.28].forEach(px => {
+    ctx.beginPath(); ctx.ellipse(px, -hop * 0.2, w * 0.12, h * 0.1, 0, 0, Math.PI * 2); ctx.fill();
+  });
+
+  const gradCuerpo = ctx.createRadialGradient(-w * 0.1, -h * 0.7 - hop, w * 0.1, 0, -h * 0.5 - hop, w * 0.5);
+  gradCuerpo.addColorStop(0, '#8fd66b');
+  gradCuerpo.addColorStop(0.6, '#4f9142');
+  gradCuerpo.addColorStop(1, '#2e5c28');
+  ctx.beginPath();
+  ctx.ellipse(0, -h * 0.5 - hop, w * 0.48, h * 0.4, 0, 0, Math.PI * 2);
+  ctx.fillStyle = gradCuerpo; ctx.fill();
+  ctx.strokeStyle = '#234a1e';
+  ctx.lineWidth = Math.max(1, w * 0.018);
+  ctx.stroke();
+
+  ctx.fillStyle = 'rgba(40,80,35,0.55)';
+  [[-w * 0.15, -h * 0.12], [w * 0.1, -h * 0.2], [0, h * 0.05], [w * 0.18, h * 0.07]].forEach(([dx, dy]) => {
+    ctx.beginPath(); ctx.arc(dx, -h * 0.5 - hop + dy, w * 0.045, 0, Math.PI * 2); ctx.fill();
+  });
+
+  [-w * 0.14, w * 0.1].forEach(ex => {
+    const ey = -h * 0.86 - hop;
+    ctx.beginPath(); ctx.arc(ex, ey, w * 0.1, 0, Math.PI * 2);
+    ctx.fillStyle = '#e9e06a'; ctx.fill();
+    ctx.strokeStyle = '#234a1e'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(ex + w * 0.02, ey, w * 0.045, 0, Math.PI * 2);
+    ctx.fillStyle = '#1a1a1a'; ctx.fill();
+  });
+
+  const mouthY = -h * 0.42 - hop;
+  ctx.beginPath();
+  ctx.moveTo(-w * 0.3, mouthY);
+  ctx.quadraticCurveTo(0, mouthY + h * 0.12, w * 0.3, mouthY);
+  ctx.lineWidth = Math.max(1, w * 0.022);
+  ctx.strokeStyle = '#1a1a1a'; ctx.stroke();
+  ctx.fillStyle = '#fff';
+  for (let i = -2; i <= 2; i++) {
+    const tx = i * w * 0.1;
+    ctx.beginPath();
+    ctx.moveTo(tx - w * 0.02, mouthY + 2);
+    ctx.lineTo(tx + w * 0.02, mouthY + 2);
+    ctx.lineTo(tx, mouthY + w * 0.06);
+    ctx.closePath(); ctx.fill();
+  }
+}
+
+const ENEMY_SPRITES = [
+  { w: 46, h: 74, vel: 95, tipo: 'robot', dibujar: dibujarRobot },
+  { w: 92, h: 86, vel: 32, tipo: 'bronce', dibujar: dibujarBronce },
+  { w: 96, h: 80, vel: 58, tipo: 'verde', dibujar: dibujarVerde },
+];
+
+// Monedas: diseño 100% procedural (canvas), sin imagen. Cada tier tiene su
+// propia paleta metálica y radio (las de más valor se ven más grandes).
+const COIN_TYPES = [
+  {
+    valor: 5, peso: 0.68, r: 17,
+    claro: '#f6fafc', medio: '#c7d3db', oscuro: '#8a97a2', rim: '#57626b', brillo: 'rgba(255,255,255,0.55)',
+  },
+  {
+    valor: 50, peso: 0.24, r: 21,
+    claro: '#fff3c2', medio: '#f0c04a', oscuro: '#b3801f', rim: '#785816', brillo: 'rgba(255,250,220,0.6)',
+  },
+  {
+    valor: 100, peso: 0.08, r: 25,
+    claro: '#f3c9a1', medio: '#c97a42', oscuro: '#87491f', rim: '#5a2f14', brillo: 'rgba(255,230,200,0.55)',
+  },
+];
+
+function elegirMoneda() {
+  const r = Math.random();
+  let acc = 0;
+  for (const c of COIN_TYPES) {
+    acc += c.peso;
+    if (r <= acc) return c;
+  }
+  return COIN_TYPES[0];
+}
+
+function dibujarEstrella(r, colorClaro, colorOscuro) {
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const ang = (Math.PI / 5) * i - Math.PI / 2;
+    const rad = i % 2 === 0 ? r : r * 0.42;
+    const x = Math.cos(ang) * rad, y = Math.sin(ang) * rad;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  const grad = ctx.createLinearGradient(-r, -r, r, r);
+  grad.addColorStop(0, colorClaro);
+  grad.addColorStop(1, colorOscuro);
+  ctx.fillStyle = grad;
+  ctx.fill();
+  ctx.lineWidth = Math.max(0.6, r * 0.06);
+  ctx.strokeStyle = colorOscuro;
+  ctx.stroke();
+}
+
+function dibujarMonedaProc(sx, sy, tipo, fase) {
+  const r = tipo.r;
+  const giro = Math.cos(tiempoJugado * 2.3 + fase);
+  const escalaX = Math.max(0.16, Math.abs(giro));
+
+  ctx.save();
+  ctx.translate(sx, sy);
+  ctx.scale(escalaX, 1);
+
+  // Cuerpo metálico con degradado radial (efecto abombado)
+  const gradCuerpo = ctx.createRadialGradient(-r * 0.3, -r * 0.35, r * 0.1, 0, 0, r);
+  gradCuerpo.addColorStop(0, tipo.claro);
+  gradCuerpo.addColorStop(0.55, tipo.medio);
+  gradCuerpo.addColorStop(1, tipo.rim);
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fillStyle = gradCuerpo;
+  ctx.fill();
+
+  // Muescas del canto, como una moneda real
+  ctx.strokeStyle = tipo.oscuro;
+  ctx.lineWidth = Math.max(1, r * 0.1);
+  const marcas = 14;
+  for (let i = 0; i < marcas; i++) {
+    const ang = (i / marcas) * Math.PI * 2;
+    const x1 = Math.cos(ang) * r * 0.88, y1 = Math.sin(ang) * r * 0.88;
+    const x2 = Math.cos(ang) * r * 0.99, y2 = Math.sin(ang) * r * 0.99;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+
+  // Cara interior
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.76, 0, Math.PI * 2);
+  ctx.fillStyle = tipo.medio;
+  ctx.fill();
+  ctx.lineWidth = Math.max(1, r * 0.05);
+  ctx.strokeStyle = tipo.oscuro;
+  ctx.stroke();
+
+  // La estrella y el brillo solo se ven de frente (simula el giro 3D)
+  if (Math.abs(giro) > 0.3) {
+    dibujarEstrella(r * 0.42, tipo.claro, tipo.oscuro);
+    ctx.beginPath();
+    ctx.arc(-r * 0.3, -r * 0.32, r * 0.26, 0, Math.PI * 2);
+    ctx.fillStyle = tipo.brillo;
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+// ---------- Constantes de juego ----------
+const GRAVITY = 2200;
+const JUMP_VELOCITY = -780;
+const DOUBLE_JUMP_VELOCITY = -660;
+const MAX_JUMPS = 2;
+
+const BASE_SPEED = 330;
+const MAX_SPEED_BONUS = 300;
+const SPEED_RAMP = 3.2;
+
+const KNOCKBACK_SPEED = 230;
+const HIT_KNOCKBACK_TIME = 0.18;
+const HIT_STUN_TIME = 0.7;
+const INVULN_TIME = 1.6;
+
+const PLAYER_SCREEN_X = 220;
+const PLAYER_W = 60;
+const PLAYER_H = 86;
+
+const CAR_MIN_W = 260;
+const CAR_MAX_W = 430;
+const CAR_THICK = 120;
+const GAP_MIN = 90;
+const GAP_MAX_ABS = 340;
+const TOPY_VARIANCE = 34;
+
+const VOID_MARGIN = 320;
+const LANDING_TOLERANCE = 64;
+
+// ---------- Estado ----------
+let estado = 'menu'; // menu | playing | paused | gameover
+let cameraX = 0;
+let worldSpeed = BASE_SPEED;
+let tiempoJugado = 0;
+let monedasScore = 0;
+let distanciaAcc = 0;
+let mejorPuntuacion = Number(localStorage.getItem('fugaOrbital_mejorPuntuacion') || 0);
+
+let player, plataformas, monedas, enemigos, textosFlotantes;
+let nextSpawnX = 0;
+let ultimoTopY = 0;
+let shakeTimer = 0;
+
+const teclas = new Set();
+
+// ---------- Perfil / Tienda ----------
+// Moneda persistente (independiente de la puntuación de cada partida, se
+// guarda en localStorage) con la que se compran mejoras y cosméticos.
+//
+// Las MEJORAS son consumibles de un solo uso: se compran como "cargas" en el
+// inventario y hay que "prepararlas" desde la tienda antes de darle a Jugar;
+// al iniciar la partida se gasta una carga de cada mejora preparada y su
+// efecto sólo dura esa partida. Para volver a usarlas hay que prepararlas
+// de nuevo (si quedan cargas) o comprar más.
+const MEJORAS = {
+  vidas: { nombre: 'Vidas extra', desc: 'Un corazón extra para esta partida', icono: '❤', costo: 400 },
+  iman: { nombre: 'Imán de monedas', desc: 'Recoge monedas desde más lejos en esta partida', icono: '🧲', costo: 250 },
+  salto: { nombre: 'Salto reforzado', desc: 'Salta más alto en esta partida', icono: '⬆', costo: 300 },
+  multiplicador: { nombre: 'Monedas con valor', desc: 'Las monedas valen x1.4 en esta partida', icono: '✨', costo: 350 },
+};
+
+// Los COSMETICOS son permanentes: se compran una vez y se pueden
+// equipar/quitar libremente sin gastarse.
+const COSMETICOS = {
+  gorra: { nombre: 'Gorra', desc: 'Un gorro con estilo', icono: '🧢', costo: 450 },
+  gafas: { nombre: 'Gafas', desc: 'Para verse genial', icono: '🕶️', costo: 500 },
+  capa: { nombre: 'Capa', desc: 'Ondea al correr y saltar', icono: '🦸', costo: 700 },
+  antena: { nombre: 'Antena alien', desc: 'Una antenita que brilla', icono: '📡', costo: 400 },
+  bufanda: { nombre: 'Bufanda', desc: 'Ondea con el viento', icono: '🧣', costo: 420 },
+  corona: { nombre: 'Corona', desc: 'Para sentirte de la realeza', icono: '👑', costo: 650 },
+};
+
+const BONUS_VIDAS = 1;
+const BONUS_IMAN = 30;
+const BONUS_SALTO = 70;
+const MULT_MONEDAS_ACTIVO = 1.4;
+
+function perfilPorDefecto() {
+  return {
+    monedas: 0,
+    inventario: { vidas: 0, iman: 0, salto: 0, multiplicador: 0 },
+    seleccion: { vidas: false, iman: false, salto: false, multiplicador: false },
+    cosmeticos: { gorra: false, gafas: false, capa: false, antena: false, bufanda: false, corona: false },
+    equipados: { gorra: false, gafas: false, capa: false, antena: false, bufanda: false, corona: false },
+  };
+}
+
+let perfil = perfilPorDefecto();
+try {
+  const guardado = JSON.parse(localStorage.getItem('fugaOrbital_perfil'));
+  if (guardado) {
+    perfil = perfilPorDefecto();
+    perfil.monedas = Number(guardado.monedas) || 0;
+    Object.assign(perfil.inventario, guardado.inventario || {});
+    Object.assign(perfil.seleccion, guardado.seleccion || {});
+    Object.assign(perfil.cosmeticos, guardado.cosmeticos || {});
+    Object.assign(perfil.equipados, guardado.equipados || {});
+  }
+} catch (err) { /* perfil corrupto o inexistente: se usa el de por defecto */ }
+
+function guardarPerfil() {
+  localStorage.setItem('fugaOrbital_perfil', JSON.stringify(perfil));
+}
+
+// Mejoras realmente activas durante la partida en curso (se fijan al pulsar
+// Jugar, al consumir lo que estaba preparado en la tienda).
+let efectosActivos = { vidas: false, iman: false, salto: false, multiplicador: false };
+
+function vidasMax() {
+  return 3 + (efectosActivos.vidas ? BONUS_VIDAS : 0);
+}
+
+function actualizarInicio() {
+  document.getElementById('record-inicio').textContent = mejorPuntuacion;
+  document.getElementById('saldo-inicio').textContent = perfil.monedas;
+  const iconos = Object.entries(MEJORAS)
+    .filter(([id]) => perfil.seleccion[id] && perfil.inventario[id] > 0)
+    .map(([id, def]) => def.icono);
+  document.getElementById('mejoras-listas').textContent = iconos.length
+    ? `Preparadas para la próxima partida: ${iconos.join(' ')}`
+    : '';
+}
+actualizarInicio();
+
+// ---------- Utilidades ----------
+function rand(min, max) { return min + Math.random() * (max - min); }
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+function hashNoise(x) {
+  const s = Math.sin(x * 12.9898) * 43758.5453;
+  return s - Math.floor(s);
+}
+function formatearTiempo(seg) {
+  const m = Math.floor(seg / 60).toString().padStart(2, '0');
+  const s = Math.floor(seg % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
+}
+
+// ---------- Entidades ----------
+function crearJugador() {
+  return {
+    worldX: PLAYER_SCREEN_X,
+    y: trainBaseY - PLAYER_H / 2,
+    vy: 0,
+    grounded: true,
+    jumpsRemaining: MAX_JUMPS,
+    hitStunTimer: 0,
+    invulnTimer: INVULN_TIME * 0.4,
+    squash: 1,
+  };
+}
+
+function anchoAleatorioVagon() { return rand(CAR_MIN_W, CAR_MAX_W); }
+
+function maxHuecoSaltable() {
+  const airTime = (2 * Math.abs(JUMP_VELOCITY)) / GRAVITY;
+  return worldSpeed * airTime * 0.78;
+}
+
+function crearVagon(startX) {
+  const w = anchoAleatorioVagon();
+  ultimoTopY = clamp(
+    ultimoTopY + rand(-TOPY_VARIANCE, TOPY_VARIANCE),
+    trainBaseY - 70, trainBaseY + 70
+  );
+  const car = {
+    x1: startX,
+    x2: startX + w,
+    topY: ultimoTopY,
+    tinte: Math.floor(rand(0, 40)),
+  };
+  plataformas.push(car);
+
+  // Monedas sobre el vagón
+  if (Math.random() < 0.4 && w > 160) {
+    const n = Math.floor(rand(1, 3));
+    const margen = 40;
+    for (let i = 0; i < n; i++) {
+      const cx = startX + margen + (w - margen * 2) * (n === 1 ? 0.5 : i / (n - 1));
+      const tipo = elegirMoneda();
+      monedas.push({ x: cx, y: car.topY - 78 - Math.sin(i) * 10, tipo, fase: Math.random() * Math.PI * 2, tomada: false });
+    }
+  }
+
+  // Enemigo sobre el vagón
+  const pEnemigo = clamp(0.16 + tiempoJugado * 0.008, 0.16, 0.55);
+  if (w > 200 && Math.random() < pEnemigo) {
+    const def = ENEMY_SPRITES[Math.floor(Math.random() * ENEMY_SPRITES.length)];
+    const margen = def.w / 2 + 20;
+    const centro = startX + w / 2;
+    enemigos.push({
+      def,
+      x: centro,
+      y: car.topY - def.h / 2,
+      dir: Math.random() < 0.5 ? 1 : -1,
+      minX: Math.max(startX + margen, centro - w / 2 + margen),
+      maxX: Math.min(startX + w - margen, centro + w / 2 - margen),
+      vivo: true,
+    });
+  }
+
+  return car;
+}
+
+function reiniciarMundo() {
+  cameraX = 0;
+  worldSpeed = BASE_SPEED;
+  tiempoJugado = 0;
+  monedasScore = 0;
+  distanciaAcc = 0;
+  plataformas = [];
+  monedas = [];
+  enemigos = [];
+  textosFlotantes = [];
+  shakeTimer = 0;
+  ultimoTopY = trainBaseY;
+
+  plataformas.push({ x1: -400, x2: 480, topY: trainBaseY, tinte: 0 });
+  nextSpawnX = 480;
+  while (nextSpawnX < W + 700) {
+    const gap = rand(GAP_MIN, Math.min(GAP_MAX_ABS, maxHuecoSaltable()));
+    nextSpawnX += gap;
+    const car = crearVagon(nextSpawnX);
+    nextSpawnX = car.x2;
+  }
+
+  player = crearJugador();
+}
+
+function actualizarSpawns() {
+  while (nextSpawnX < cameraX + W + 700) {
+    const gap = rand(GAP_MIN, Math.min(GAP_MAX_ABS, maxHuecoSaltable()));
+    nextSpawnX += gap;
+    const car = crearVagon(nextSpawnX);
+    nextSpawnX = car.x2;
+  }
+  const limite = cameraX - 500;
+  plataformas = plataformas.filter(p => p.x2 > limite);
+  monedas = monedas.filter(m => m.x > limite);
+  enemigos = enemigos.filter(e => e.x > limite);
+}
+
+function plataformaEn(worldX) {
+  for (const p of plataformas) {
+    if (worldX >= p.x1 && worldX <= p.x2) return p;
+  }
+  return null;
+}
+
+function puntuacionTotal() {
+  return monedasScore + Math.floor(distanciaAcc);
+}
+
+// ---------- Vida / muerte ----------
+let vidas = 3;
+
+function actualizarHUDVidas() {
+  const cont = document.getElementById('vidas');
+  cont.innerHTML = '';
+  for (let i = 0; i < vidasMax(); i++) {
+    const span = document.createElement('span');
+    span.className = 'corazon' + (i < vidas ? '' : ' perdido');
+    span.textContent = '❤';
+    cont.appendChild(span);
+  }
+}
+
+function perderVida(causa) {
+  if (player.invulnTimer > 0 || estado !== 'playing') return;
+  vidas--;
+  shakeTimer = 0.3;
+  actualizarHUDVidas();
+
+  if (vidas <= 0) {
+    gameOver(causa);
+    return;
+  }
+
+  // Reubicar al jugador sobre la plataforma más cercana por delante de la cámara
+  let destino = null;
+  for (const p of plataformas) {
+    if (p.x2 > cameraX + 40) { destino = p; break; }
+  }
+  if (!destino) destino = plataformas[plataformas.length - 1];
+
+  const objetivoX = Math.max(destino.x1 + 40, cameraX + PLAYER_SCREEN_X);
+  player.worldX = Math.min(objetivoX, destino.x2 - 40);
+  player.y = destino.topY - PLAYER_H / 2;
+  player.vy = 0;
+  player.grounded = true;
+  player.jumpsRemaining = MAX_JUMPS;
+  player.hitStunTimer = 0;
+  player.invulnTimer = INVULN_TIME;
+}
+
+// Guarda en el perfil persistente las monedas ganadas en la partida y
+// actualiza la mejor puntuación; se usa tanto al perder como al volver
+// al menú principal desde la pausa (para no perder lo ya recolectado).
+function finalizarPartida() {
+  const total = puntuacionTotal();
+  if (total > mejorPuntuacion) {
+    mejorPuntuacion = total;
+    localStorage.setItem('fugaOrbital_mejorPuntuacion', String(mejorPuntuacion));
+  }
+  if (monedasScore > 0) {
+    perfil.monedas += monedasScore;
+    guardarPerfil();
+  }
+  return total;
+}
+
+function gameOver(causa) {
+  estado = 'gameover';
+  const total = finalizarPartida();
+  const motivos = {
+    enemigo: 'Un enemigo alienígena te alcanzó.',
+    vacio: 'Caíste al vacío entre los vagones.',
+    camara: 'Te quedaste fuera de cámara.',
+  };
+  document.getElementById('motivo-muerte').textContent = motivos[causa] || '';
+  document.getElementById('puntuacion-final').textContent = total;
+  document.getElementById('tiempo-final').textContent = formatearTiempo(tiempoJugado);
+  document.getElementById('record-final').textContent = mejorPuntuacion;
+  mostrarPantalla('pantalla-gameover');
+}
+
+// ---------- Input ----------
+function saltar() {
+  if (estado !== 'playing') return;
+  if (player.jumpsRemaining > 0) {
+    const boost = efectosActivos.salto ? BONUS_SALTO : 0;
+    player.vy = (player.jumpsRemaining === MAX_JUMPS ? JUMP_VELOCITY : DOUBLE_JUMP_VELOCITY) - boost;
+    player.jumpsRemaining--;
+    player.grounded = false;
+    player.squash = 1.25;
+  }
+}
+
+function alternarPausa() {
+  if (estado === 'playing') {
+    estado = 'paused';
+    mostrarPantalla('pantalla-pausa');
+  } else if (estado === 'paused') {
+    estado = 'playing';
+    mostrarPantalla(null);
+  }
+}
+
+window.addEventListener('keydown', e => {
+  if (e.code === 'Space' || e.code === 'ArrowUp') {
+    e.preventDefault();
+    if (!teclas.has(e.code)) saltar();
+    teclas.add(e.code);
+  }
+  if (e.code === 'KeyP' || e.code === 'Escape') {
+    alternarPausa();
+  }
+});
+window.addEventListener('keyup', e => teclas.delete(e.code));
+
+canvas.addEventListener('pointerdown', () => {
+  if (estado === 'playing') saltar();
+});
+
+document.getElementById('btn-jugar').addEventListener('click', () => {
+  iniciarJuego();
+});
+document.getElementById('btn-reintentar').addEventListener('click', () => iniciarJuego());
+document.getElementById('btn-reanudar').addEventListener('click', alternarPausa);
+document.getElementById('btn-pausa').addEventListener('click', alternarPausa);
+
+function volverAlMenuPrincipal() {
+  if (estado === 'playing' || estado === 'paused') finalizarPartida();
+  estado = 'menu';
+  actualizarInicio();
+  mostrarPantalla('pantalla-inicio');
+}
+document.getElementById('btn-menu-principal').addEventListener('click', volverAlMenuPrincipal);
+document.getElementById('btn-menu-principal-gameover').addEventListener('click', volverAlMenuPrincipal);
+
+function mostrarPantalla(id) {
+  ['pantalla-inicio', 'pantalla-pausa', 'pantalla-gameover', 'pantalla-tienda', 'pantalla-ajustes'].forEach(pid => {
+    document.getElementById(pid).classList.toggle('oculto', pid !== id);
+  });
+}
+
+// Convierte lo preparado en la tienda en efectos de la partida: gasta una
+// carga de inventario por cada mejora preparada y la deja lista para usarse;
+// al terminar quedan "sin preparar" así que no se reutilizan solas.
+function consumirMejorasPreparadas() {
+  efectosActivos = { vidas: false, iman: false, salto: false, multiplicador: false };
+  let huboConsumo = false;
+  for (const id of Object.keys(MEJORAS)) {
+    if (perfil.seleccion[id] && perfil.inventario[id] > 0) {
+      perfil.inventario[id]--;
+      perfil.seleccion[id] = false;
+      efectosActivos[id] = true;
+      huboConsumo = true;
+    }
+  }
+  if (huboConsumo) guardarPerfil();
+}
+
+function iniciarJuego() {
+  consumirMejorasPreparadas();
+  vidas = vidasMax();
+  actualizarHUDVidas();
+  reiniciarMundo();
+  estado = 'playing';
+  mostrarPantalla(null);
+}
+
+// ---------- Tienda ----------
+function renderTienda() {
+  const listaMejoras = document.getElementById('tienda-lista-mejoras');
+  listaMejoras.innerHTML = Object.entries(MEJORAS).map(([id, def]) => {
+    const cantidad = perfil.inventario[id];
+    const preparada = perfil.seleccion[id] && cantidad > 0;
+    const sinFondos = perfil.monedas < def.costo;
+    const textoPreparar = cantidad > 0 ? (preparada ? 'Preparada ✓' : 'Preparar') : 'Sin cargas';
+    return `
+      <div class="tienda-item">
+        <div class="tienda-item-icono">${def.icono}</div>
+        <div class="tienda-item-info">
+          <div class="tienda-item-nombre">${def.nombre}</div>
+          <div class="tienda-item-desc">${def.desc}</div>
+          <div class="tienda-item-nivel">En inventario: ${cantidad}</div>
+        </div>
+        <div class="tienda-item-acciones">
+          <button class="tienda-item-btn" data-tipo="comprar-mejora" data-id="${id}"${sinFondos ? ' disabled' : ''}>Comprar · ${def.costo}</button>
+          <button class="tienda-item-btn secundario${preparada ? ' equipado' : ''}" data-tipo="preparar-mejora" data-id="${id}"${cantidad <= 0 ? ' disabled' : ''}>${textoPreparar}</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  const listaCosmeticos = document.getElementById('tienda-lista-cosmeticos');
+  listaCosmeticos.innerHTML = Object.entries(COSMETICOS).map(([id, def]) => {
+    const comprado = perfil.cosmeticos[id];
+    const equipado = perfil.equipados[id];
+    const disabled = !comprado && perfil.monedas < def.costo;
+    const textoBtn = !comprado ? `Comprar · ${def.costo}` : (equipado ? 'Quitar' : 'Equipar');
+    return `
+      <div class="tienda-item">
+        <div class="tienda-item-icono">${def.icono}</div>
+        <div class="tienda-item-info">
+          <div class="tienda-item-nombre">${def.nombre}</div>
+          <div class="tienda-item-desc">${def.desc}</div>
+        </div>
+        <button class="tienda-item-btn${equipado ? ' equipado' : ''}" data-tipo="cosmetico" data-id="${id}"${disabled ? ' disabled' : ''}>${textoBtn}</button>
+      </div>`;
+  }).join('');
+}
+
+function actualizarSaldoTienda() {
+  document.getElementById('tienda-saldo').textContent = perfil.monedas;
+}
+
+function comprarMejora(id) {
+  const def = MEJORAS[id];
+  if (perfil.monedas < def.costo) return;
+  perfil.monedas -= def.costo;
+  perfil.inventario[id]++;
+  guardarPerfil();
+  renderTienda();
+  actualizarSaldoTienda();
+}
+
+function prepararMejora(id) {
+  if (perfil.inventario[id] <= 0) return;
+  perfil.seleccion[id] = !perfil.seleccion[id];
+  guardarPerfil();
+  renderTienda();
+  actualizarInicio();
+}
+
+function alternarCosmetico(id) {
+  const def = COSMETICOS[id];
+  if (!perfil.cosmeticos[id]) {
+    if (perfil.monedas < def.costo) return;
+    perfil.monedas -= def.costo;
+    perfil.cosmeticos[id] = true;
+    perfil.equipados[id] = true;
+  } else {
+    perfil.equipados[id] = !perfil.equipados[id];
+  }
+  guardarPerfil();
+  renderTienda();
+  actualizarSaldoTienda();
+}
+
+function manejarClicTienda(e) {
+  const btn = e.target.closest('.tienda-item-btn');
+  if (!btn || btn.disabled) return;
+  const { tipo, id } = btn.dataset;
+  if (tipo === 'comprar-mejora') comprarMejora(id);
+  else if (tipo === 'preparar-mejora') prepararMejora(id);
+  else if (tipo === 'cosmetico') alternarCosmetico(id);
+}
+document.getElementById('tienda-lista-mejoras').addEventListener('click', manejarClicTienda);
+document.getElementById('tienda-lista-cosmeticos').addEventListener('click', manejarClicTienda);
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('activo'));
+    btn.classList.add('activo');
+    const tab = btn.dataset.tab;
+    document.getElementById('tienda-lista-mejoras').classList.toggle('oculto', tab !== 'mejoras');
+    document.getElementById('tienda-lista-cosmeticos').classList.toggle('oculto', tab !== 'cosmeticos');
+  });
+});
+
+document.getElementById('btn-tienda').addEventListener('click', () => {
+  renderTienda();
+  actualizarSaldoTienda();
+  mostrarPantalla('pantalla-tienda');
+});
+document.getElementById('btn-cerrar-tienda').addEventListener('click', () => {
+  actualizarInicio();
+  mostrarPantalla('pantalla-inicio');
+});
+
+// ---------- Ajustes ----------
+document.getElementById('btn-ajustes').addEventListener('click', () => {
+  mostrarPantalla('pantalla-ajustes');
+});
+document.getElementById('btn-cerrar-ajustes').addEventListener('click', () => {
+  mostrarPantalla('pantalla-inicio');
+});
+// La clave se guarda tal cual (sin cifrar) en localStorage: sólo busca
+// evitar que alguien borre el progreso sin querer o sin permiso, no es una
+// protección real de seguridad.
+document.getElementById('btn-borrar-datos').addEventListener('click', () => {
+  const claveGuardada = localStorage.getItem('fugaOrbital_clave');
+  if (!claveGuardada) {
+    const nuevaClave = window.prompt('Esto borrará tu progreso. Crea una clave para proteger el borrado (se guarda en este navegador):');
+    if (!nuevaClave) return;
+    localStorage.setItem('fugaOrbital_clave', nuevaClave);
+  } else {
+    const intento = window.prompt('Ingresa tu clave para borrar los datos guardados:');
+    if (intento === null) return;
+    if (intento !== claveGuardada) {
+      window.alert('Clave incorrecta. No se borraron los datos.');
+      return;
+    }
+  }
+  localStorage.removeItem('fugaOrbital_perfil');
+  localStorage.removeItem('fugaOrbital_mejorPuntuacion');
+  perfil = perfilPorDefecto();
+  mejorPuntuacion = 0;
+  actualizarInicio();
+  mostrarPantalla('pantalla-inicio');
+});
+
+// ---------- Orientación (aviso de girar el móvil) ----------
+function actualizarOrientacion() {
+  const antesPortrait = enPortrait;
+  enPortrait = window.innerHeight > window.innerWidth;
+  avisoRotar.classList.toggle('visible', enPortrait);
+
+  // Si gira a vertical estando en juego, se pasa a pausa: al volver a
+  // horizontal el jugador ve la pantalla de pausa en vez de seguir sin más.
+  if (enPortrait && !antesPortrait && estado === 'playing') {
+    estado = 'paused';
+    mostrarPantalla('pantalla-pausa');
+  }
+}
+window.addEventListener('resize', actualizarOrientacion);
+window.addEventListener('orientationchange', actualizarOrientacion);
+actualizarOrientacion();
+
+// ---------- Pantalla completa ----------
+// Nota: algunos navegadores (sobre todo versiones antiguas con prefijo
+// "webkit"/"moz") no devuelven una Promise en requestFullscreen/exitFullscreen,
+// así que hay que comprobarlo antes de encadenar .then/.catch; si no, la
+// llamada lanza un error síncrono y el botón queda "sin hacer nada".
+const btnFullscreen = document.getElementById('btn-fullscreen');
+
+function comoPromesa(resultado) {
+  return resultado && typeof resultado.then === 'function' ? resultado : Promise.resolve();
+}
+
+function hayFullscreenActivo() {
+  return !!(document.fullscreenElement || document.webkitFullscreenElement ||
+    document.mozFullScreenElement || document.msFullscreenElement);
+}
+
+function solicitarFullscreen(el) {
+  const fn = el.requestFullscreen || el.webkitRequestFullscreen ||
+    el.mozRequestFullScreen || el.msRequestFullscreen;
+  if (!fn) return Promise.reject(new Error('Fullscreen no soportado'));
+  return comoPromesa(fn.call(el));
+}
+
+function salirFullscreen() {
+  const fn = document.exitFullscreen || document.webkitExitFullscreen ||
+    document.mozCancelFullScreen || document.msExitFullscreen;
+  if (!fn) return Promise.resolve();
+  return comoPromesa(fn.call(document));
+}
+
+function alternarFullscreen() {
+  try {
+    if (!hayFullscreenActivo()) {
+      solicitarFullscreen(document.documentElement).then(() => {
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape').catch(() => {});
+        }
+      }).catch(() => {});
+    } else {
+      salirFullscreen().catch(() => {});
+    }
+  } catch (err) {
+    // El navegador rechazó la solicitud (p. ej. Safari antiguo en iPhone); no hay más que hacer.
+  }
+}
+
+btnFullscreen.addEventListener('click', alternarFullscreen);
+
+['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(evento => {
+  document.addEventListener(evento, () => {
+    btnFullscreen.textContent = hayFullscreenActivo() ? '⤢' : '⛶';
+  });
+});
+
+// ---------- Actualización ----------
+function actualizarJugador(dt) {
+  // Velocidad horizontal efectiva (auto-run, salvo hit-stun)
+  let vx = worldSpeed;
+  if (player.hitStunTimer > 0) {
+    if (player.hitStunTimer > HIT_STUN_TIME - HIT_KNOCKBACK_TIME) {
+      vx = -KNOCKBACK_SPEED;
+    } else {
+      vx = 0;
+    }
+    player.hitStunTimer -= dt;
+  }
+  player.worldX += vx * dt;
+
+  // Física vertical
+  player.vy += GRAVITY * dt;
+  player.y += player.vy * dt;
+
+  const plat = plataformaEn(player.worldX);
+  const pies = player.y + PLAYER_H / 2;
+  if (plat && player.vy >= 0 && pies >= plat.topY && pies <= plat.topY + LANDING_TOLERANCE) {
+    player.y = plat.topY - PLAYER_H / 2;
+    player.vy = 0;
+    if (!player.grounded) player.squash = 0.8;
+    player.grounded = true;
+    player.jumpsRemaining = MAX_JUMPS;
+  } else {
+    player.grounded = false;
+  }
+
+  player.squash += (1 - player.squash) * Math.min(1, dt * 10);
+
+  if (player.invulnTimer > 0) player.invulnTimer -= dt;
+
+  // Caída al vacío
+  if (pies > trainBaseY + VOID_MARGIN) {
+    perderVida('vacio');
+    return;
+  }
+
+  // Fuera de cámara
+  const screenX = player.worldX - cameraX;
+  if (screenX < -PLAYER_W) {
+    perderVida('camara');
+  }
+}
+
+function actualizarEnemigos(dt) {
+  for (const en of enemigos) {
+    en.x += en.def.vel * en.dir * dt;
+    if (en.x < en.minX) { en.x = en.minX; en.dir = 1; }
+    if (en.x > en.maxX) { en.x = en.maxX; en.dir = -1; }
+
+    if (player.invulnTimer <= 0) {
+      const dx = Math.abs(player.worldX - en.x);
+      const dy = Math.abs((player.y) - en.y);
+      if (dx < (PLAYER_W + en.def.w) * 0.36 && dy < (PLAYER_H + en.def.h) * 0.36) {
+        player.hitStunTimer = HIT_STUN_TIME;
+        perderVida('enemigo');
+      }
+    }
+  }
+}
+
+function actualizarMonedas() {
+  const bonusIman = efectosActivos.iman ? BONUS_IMAN : 0;
+  const multiplicador = efectosActivos.multiplicador ? MULT_MONEDAS_ACTIVO : 1;
+  for (const m of monedas) {
+    if (m.tomada) continue;
+    const dx = Math.abs(player.worldX - m.x);
+    const dy = Math.abs(player.y - m.y);
+    if (dx < 46 + bonusIman && dy < 50 + bonusIman * 0.8) {
+      m.tomada = true;
+      const valor = Math.round(m.tipo.valor * multiplicador);
+      monedasScore += valor;
+      textosFlotantes.push({ x: m.x, y: m.y, texto: `+${valor}`, vida: 0.8 });
+    }
+  }
+  monedas = monedas.filter(m => !m.tomada);
+}
+
+function actualizarTextos(dt) {
+  for (const t of textosFlotantes) { t.y -= 40 * dt; t.vida -= dt; }
+  textosFlotantes = textosFlotantes.filter(t => t.vida > 0);
+}
+
+function update(dt) {
+  if (enPortrait) return;
+  if (estado !== 'playing') return;
+
+  tiempoJugado += dt;
+  worldSpeed = BASE_SPEED + Math.min(MAX_SPEED_BONUS, tiempoJugado * SPEED_RAMP);
+  cameraX += worldSpeed * dt;
+  distanciaAcc += worldSpeed * dt * 0.04;
+
+  actualizarSpawns();
+  actualizarJugador(dt);
+  if (estado !== 'playing') return;
+  actualizarEnemigos(dt);
+  actualizarMonedas();
+  actualizarTextos(dt);
+
+  if (shakeTimer > 0) shakeTimer -= dt;
+
+  document.getElementById('puntuacion').textContent = `${puntuacionTotal()} pts`;
+  document.getElementById('tiempo').textContent = formatearTiempo(tiempoJugado);
+}
+
+// ---------- Render: fondo alienígena ----------
+function dibujarFondo() {
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#170830');
+  grad.addColorStop(0.45, '#391259');
+  grad.addColorStop(0.78, '#5c2065');
+  grad.addColorStop(1, '#180a26');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  dibujarNebulosas();
+  dibujarEstrellas();
+  dibujarLluviaMeteoros();
+  dibujarPlanetaLejano();
+  dibujarLunas();
+  dibujarAsteroides();
+  dibujarMontanasFondo();
+  dibujarMontanas();
+  dibujarRuinas();
+  dibujarVegetacion();
+}
+
+// Nubes de nebulosa muy lejanas y lentas, dan color al cielo
+function dibujarNebulosas() {
+  const factor = 0.015;
+  const tile = 1900;
+  const offset = (cameraX * factor) % tile;
+  const inicio = -tile - offset;
+  ctx.save();
+  for (let base = inicio; base < W + tile; base += tile) {
+    const seed = Math.floor((base + cameraX * factor) / tile);
+    const cx = base + tile * 0.5;
+    const cy = H * (0.1 + hashNoise(seed * 3) * 0.2);
+    const r = tile * 0.55;
+    const hue = hashNoise(seed * 7) > 0.5 ? '130,70,210' : '40,190,195';
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    grad.addColorStop(0, `rgba(${hue},0.18)`);
+    grad.addColorStop(0.6, `rgba(${hue},0.07)`);
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, r, r * 0.5, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function dibujarEstrellas() {
+  const factor = 0.03;
+  const tile = 260;
+  const offset = (cameraX * factor) % tile;
+  const inicio = -Math.floor(offset / tile) * tile - tile;
+  ctx.save();
+  for (let base = inicio; base < W + tile; base += tile) {
+    for (let i = 0; i < 6; i++) {
+      const seed = Math.floor((base + cameraX * factor) / tile) * 13 + i;
+      const px = base - offset + hashNoise(seed) * tile;
+      const py = hashNoise(seed * 3.1) * H * 0.7;
+      const r = 1 + hashNoise(seed * 7.7) * 1.6;
+      const alpha = 0.35 + 0.65 * Math.abs(Math.sin(tiempoJugado * 2 + seed));
+      const tinte = hashNoise(seed * 4.4);
+      const color = tinte > 0.85 ? `rgba(180,210,255,${alpha.toFixed(2)})`
+        : tinte > 0.7 ? `rgba(255,210,220,${alpha.toFixed(2)})`
+        : `rgba(255,255,255,${alpha.toFixed(2)})`;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(px, py, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+// Lluvia de meteoros: varios trazos simultáneos y frecuentes por tramo
+function dibujarLluviaMeteoros() {
+  const periodo = 1.3;
+  const duracion = 0.55;
+  const idx = Math.floor(tiempoJugado / periodo);
+  const slotStart = idx * periodo;
+  const seedBase = idx * 137.9;
+  const cantidad = 1 + Math.floor(hashNoise(seedBase) * 3);
+
+  for (let i = 0; i < cantidad; i++) {
+    const seed = seedBase + i * 17.3;
+    const offset = hashNoise(seed * 1.7) * (periodo - duracion);
+    const tLocal = tiempoJugado - slotStart - offset;
+    if (tLocal < 0 || tLocal > duracion) continue;
+
+    const prog = tLocal / duracion;
+    const startX = W * (0.05 + hashNoise(seed * 2) * 0.9);
+    const startY = H * (0.03 + hashNoise(seed * 3) * 0.25);
+    const largo = 130 + hashNoise(seed * 4) * 110;
+    const ang = 0.45 + hashNoise(seed * 5) * 0.4;
+    const x = startX + Math.cos(ang) * largo * prog;
+    const y = startY + Math.sin(ang) * largo * prog;
+    const dx = Math.cos(ang) * largo * 0.4, dy = Math.sin(ang) * largo * 0.4;
+    const alpha = Math.sin(prog * Math.PI);
+
+    ctx.save();
+    const grad = ctx.createLinearGradient(x - dx, y - dy, x, y);
+    grad.addColorStop(0, 'rgba(255,255,255,0)');
+    grad.addColorStop(1, `rgba(255,255,255,${alpha.toFixed(2)})`);
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x - dx, y - dy);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.fillStyle = `rgba(255,255,255,${alpha.toFixed(2)})`;
+    ctx.beginPath();
+    ctx.arc(x, y, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+// Planeta gaseoso adicional, más lejano que las dos lunas principales
+function dibujarPlanetaLejano() {
+  const factor = 0.06;
+  const tile = 2600;
+  const offset = (cameraX * factor) % tile;
+  const px = 1500 - offset;
+  const py = H * 0.3;
+  const r = 38;
+  ctx.save();
+  ctx.globalAlpha = 0.85;
+  const grad = ctx.createRadialGradient(px - r * 0.3, py - r * 0.3, r * 0.1, px, py, r);
+  grad.addColorStop(0, '#a6dcd6');
+  grad.addColorStop(1, '#3f7a78');
+  ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2);
+  ctx.fillStyle = grad; ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.lineWidth = 3;
+  [-0.4, 0, 0.35].forEach(dy => {
+    ctx.beginPath();
+    ctx.ellipse(px, py + dy * r, r * 0.95, r * 0.22, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  });
+  ctx.restore();
+}
+
+// Planeta con anillo detallado: sombreado esférico, bandas atmosféricas y
+// el anillo partido en mitad trasera/delantera para que rodee la esfera.
+function dibujarPlanetaAnillado(px, py, r) {
+  ctx.save();
+
+  const halo = ctx.createRadialGradient(px, py, r * 0.7, px, py, r * 2.3);
+  halo.addColorStop(0, 'rgba(255,217,160,0.28)');
+  halo.addColorStop(1, 'rgba(255,217,160,0)');
+  ctx.fillStyle = halo;
+  ctx.beginPath(); ctx.arc(px, py, r * 2.3, 0, Math.PI * 2); ctx.fill();
+
+  // Mitad trasera del anillo (pasa detrás del planeta)
+  ctx.strokeStyle = 'rgba(255,220,160,0.45)';
+  ctx.lineWidth = r * 0.24;
+  ctx.beginPath();
+  ctx.ellipse(px, py, r * 1.75, r * 0.37, -0.3, Math.PI * 0.05, Math.PI * 0.95);
+  ctx.stroke();
+
+  // Esfera con degradado (luz superior izquierda)
+  const gradEsfera = ctx.createRadialGradient(px - r * 0.35, py - r * 0.35, r * 0.1, px, py, r);
+  gradEsfera.addColorStop(0, '#fff2d6');
+  gradEsfera.addColorStop(0.55, '#ffd9a0');
+  gradEsfera.addColorStop(1, '#c98a3e');
+  ctx.beginPath();
+  ctx.arc(px, py, r, 0, Math.PI * 2);
+  ctx.fillStyle = gradEsfera;
+  ctx.fill();
+
+  // Bandas atmosféricas + terminador (sombra del lado oscuro), recortadas al disco
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(px, py, r, 0, Math.PI * 2);
+  ctx.clip();
+  [[-0.6, 'rgba(190,110,40,0.28)'], [-0.15, 'rgba(255,235,190,0.22)'],
+   [0.25, 'rgba(180,100,40,0.25)'], [0.55, 'rgba(255,225,170,0.2)']].forEach(([dy, color]) => {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(px, py + dy * r, r * 1.05, r * 0.16, 0, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  const sombra = ctx.createLinearGradient(px - r, py, px + r, py);
+  sombra.addColorStop(0, 'rgba(60,30,10,0)');
+  sombra.addColorStop(1, 'rgba(50,20,10,0.45)');
+  ctx.fillStyle = sombra;
+  ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+
+  // Mitad delantera del anillo + anillo fino exterior
+  ctx.strokeStyle = 'rgba(255,225,175,0.65)';
+  ctx.lineWidth = r * 0.24;
+  ctx.beginPath();
+  ctx.ellipse(px, py, r * 1.75, r * 0.37, -0.3, Math.PI * 1.05, Math.PI * 1.95);
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,225,175,0.3)';
+  ctx.lineWidth = r * 0.06;
+  ctx.beginPath();
+  ctx.ellipse(px, py, r * 2, r * 0.44, -0.3, Math.PI * 1.05, Math.PI * 1.95);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function dibujarLunas() {
+  const factor = 0.1;
+  const tile = 1600;
+  const offset = (cameraX * factor) % tile;
+
+  const px1 = 260 - offset;
+  dibujarPlanetaAnillado(px1, H * 0.18, 60);
+
+  const px2 = px1 + 720;
+  ctx.fillStyle = '#cdd6e6';
+  ctx.beginPath();
+  ctx.arc(px2, H * 0.12, 30, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(150,160,180,0.5)';
+  [[-8, -4, 6], [10, 6, 4], [2, 12, 5]].forEach(([dx, dy, r]) => {
+    ctx.beginPath();
+    ctx.arc(px2 + dx, H * 0.12 + dy, r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+// Cinturón de rocas/asteroides flotando en el cielo lejano
+function dibujarAsteroides() {
+  const factor = 0.2;
+  const tile = 340;
+  const offset = (cameraX * factor) % tile;
+  const inicio = -tile - offset;
+  ctx.save();
+  for (let base = inicio; base < W + tile; base += tile) {
+    const seed = Math.floor((base + cameraX * factor) / tile) + 4000;
+    if (hashNoise(seed) < 0.55) continue;
+    const px = base + hashNoise(seed * 2) * tile;
+    const py = H * (0.2 + hashNoise(seed * 3) * 0.28);
+    const r = 4 + hashNoise(seed * 4) * 7;
+    ctx.fillStyle = 'rgba(70,50,85,0.65)';
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const ang = (i / 6) * Math.PI * 2;
+      const rr = r * (0.7 + hashNoise(seed * 5 + i) * 0.5);
+      const x = px + Math.cos(ang) * rr, y = py + Math.sin(ang) * rr;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+// Cordillera trasera, más lejana y tenue, da sensación de profundidad
+function dibujarMontanasFondo() {
+  const factor = 0.25;
+  const paso = 110;
+  const baseY = H * 0.68;
+  const offset = cameraX * factor;
+  ctx.save();
+  ctx.fillStyle = '#241040';
+  ctx.globalAlpha = 0.75;
+  ctx.beginPath();
+  ctx.moveTo(0, baseY);
+  for (let x = -paso; x <= W + paso; x += paso) {
+    const seed = Math.floor((x + offset) / paso) + 500;
+    const alto = 40 + hashNoise(seed) * 95;
+    ctx.lineTo(x, baseY - alto);
+  }
+  ctx.lineTo(W, baseY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function dibujarMontanas() {
+  const factor = 0.35;
+  const paso = 90;
+  const baseY = H * 0.66;
+  const offset = cameraX * factor;
+  ctx.save();
+  ctx.fillStyle = '#2c1245';
+  ctx.beginPath();
+  ctx.moveTo(0, baseY);
+  const picos = [];
+  for (let x = -paso; x <= W + paso; x += paso) {
+    const seed = Math.floor((x + offset) / paso);
+    const alto = 60 + hashNoise(seed) * 130;
+    ctx.lineTo(x, baseY - alto);
+    picos.push([x, baseY - alto, seed]);
+  }
+  ctx.lineTo(W, baseY);
+  ctx.closePath();
+  ctx.fill();
+
+  // Filo iluminado en la cara izquierda de cada pico (luz de las lunas)
+  ctx.strokeStyle = 'rgba(200,170,255,0.22)';
+  ctx.lineWidth = 3;
+  for (let i = 1; i < picos.length; i++) {
+    const [x0, y0] = picos[i - 1];
+    const [x1, y1] = picos[i];
+    if (y1 < y0) {
+      ctx.beginPath();
+      ctx.moveTo(x0, y0);
+      ctx.lineTo(x1, y1);
+      ctx.stroke();
+    }
+  }
+  // Pequeñas grietas/cráteres oscuros en las laderas
+  ctx.fillStyle = 'rgba(10,3,20,0.35)';
+  picos.forEach(([x, y, seed]) => {
+    if (hashNoise(seed * 6.6) < 0.5) return;
+    const cx = x + hashNoise(seed * 7.7) * paso * 0.6 - paso * 0.3;
+    const cy = y + 18 + hashNoise(seed * 8.8) * 30;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, 7, 4, 0.4, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
+}
+
+// Ruinas alienígenas dispersas entre las montañas y la vegetación
+function dibujarRuinas() {
+  const factor = 0.45;
+  const tile = 900;
+  const offset = (cameraX * factor) % tile;
+  const baseY = H * 0.7;
+  ctx.save();
+  for (let base = -tile; base < W + tile; base += tile) {
+    const seed = Math.floor((base + cameraX * factor) / tile) + 900;
+    if (hashNoise(seed) < 0.6) continue;
+    const px = base - offset + hashNoise(seed * 2) * tile * 0.6;
+    const alto = 50 + hashNoise(seed * 3) * 70;
+    const ancho = 14 + hashNoise(seed * 4) * 10;
+    ctx.fillStyle = 'rgba(30,15,45,0.85)';
+    ctx.fillRect(px - ancho / 2, baseY - alto, ancho, alto);
+    ctx.beginPath();
+    ctx.moveTo(px - ancho / 2, baseY - alto);
+    ctx.lineTo(px, baseY - alto - hashNoise(seed * 5) * 24);
+    ctx.lineTo(px + ancho / 2, baseY - alto + hashNoise(seed * 6) * 10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = 'rgba(140,240,255,0.28)';
+    ctx.fillRect(px - 2, baseY - alto * 0.6, 4, alto * 0.3);
+  }
+  ctx.restore();
+}
+
+function dibujarVegetacion() {
+  const factor = 0.55;
+  const tile = 200;
+  const offset = (cameraX * factor) % tile;
+  const baseY = H * 0.74;
+  ctx.save();
+  for (let base = -tile; base < W + tile; base += tile) {
+    const seed = Math.floor((base + cameraX * factor) / tile);
+    const r0 = hashNoise(seed);
+    if (r0 < 0.3) continue;
+    const px = base - offset + hashNoise(seed * 2.3) * tile * 0.7;
+
+    if (r0 < 0.62) {
+      // planta bioluminiscente
+      const alto = 20 + hashNoise(seed * 5.1) * 34;
+      const hue = hashNoise(seed * 9.3) > 0.5 ? '120,255,220' : '255,120,220';
+      const grad = ctx.createLinearGradient(0, baseY, 0, baseY - alto);
+      grad.addColorStop(0, `rgba(${hue},0.05)`);
+      grad.addColorStop(1, `rgba(${hue},0.8)`);
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(px - 7, baseY);
+      ctx.lineTo(px, baseY - alto);
+      ctx.lineTo(px + 7, baseY);
+      ctx.closePath();
+      ctx.fill();
+    } else if (r0 < 0.85) {
+      // cristal facetado brillante
+      const alto = 26 + hashNoise(seed * 6.2) * 30;
+      const ancho = alto * 0.42;
+      const hue = hashNoise(seed * 8.1) > 0.5 ? '150,210,255' : '255,150,240';
+      ctx.save();
+      ctx.translate(px, baseY);
+      ctx.beginPath();
+      ctx.moveTo(0, -alto);
+      ctx.lineTo(ancho, -alto * 0.45);
+      ctx.lineTo(ancho * 0.55, 0);
+      ctx.lineTo(-ancho * 0.55, 0);
+      ctx.lineTo(-ancho, -alto * 0.45);
+      ctx.closePath();
+      const gradC = ctx.createLinearGradient(0, -alto, 0, 0);
+      gradC.addColorStop(0, `rgba(${hue},0.9)`);
+      gradC.addColorStop(1, `rgba(${hue},0.25)`);
+      ctx.fillStyle = gradC;
+      ctx.fill();
+      ctx.strokeStyle = `rgba(${hue},0.9)`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, -alto);
+      ctx.lineTo(0, 0);
+      ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+      ctx.stroke();
+      ctx.restore();
+    } else {
+      // roca pequeña
+      const r = 8 + hashNoise(seed * 4.4) * 10;
+      ctx.fillStyle = '#241338';
+      ctx.beginPath();
+      ctx.ellipse(px, baseY - r * 0.4, r, r * 0.6, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+  dibujarParticulas();
+}
+
+// Esporas/polvo bioluminiscente flotando lentamente hacia arriba
+function dibujarParticulas() {
+  const factor = 0.5;
+  const tile = 140;
+  const offset = (cameraX * factor) % tile;
+  ctx.save();
+  for (let base = -tile; base < W + tile; base += tile) {
+    const seed = Math.floor((base + cameraX * factor) / tile) + 3000;
+    const px = base - offset + hashNoise(seed) * tile;
+    const recorrido = 300;
+    const cicloY = (tiempoJugado * 14 + hashNoise(seed * 2) * recorrido) % recorrido;
+    const py = H * 0.85 - cicloY;
+    const alpha = Math.sin((cicloY / recorrido) * Math.PI) * 0.6;
+    const r = 1.5 + hashNoise(seed * 3) * 1.5;
+    const hue = hashNoise(seed * 4) > 0.5 ? '140,255,210' : '255,180,230';
+    ctx.fillStyle = `rgba(${hue},${alpha.toFixed(2)})`;
+    ctx.beginPath();
+    ctx.arc(px, py, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+// ---------- Render: mundo ----------
+function dibujarVagones() {
+  for (const p of plataformas) {
+    const sx1 = p.x1 - cameraX;
+    const sx2 = p.x2 - cameraX;
+    if (sx2 < -50 || sx1 > W + 50) continue;
+    const w = sx2 - sx1;
+    if (w < 4) continue;
+    const hue = 260 + p.tinte;
+    const bodyTop = p.topY + 10;
+    const bodyBottom = p.topY + CAR_THICK + 40;
+    const bodyH = bodyBottom - bodyTop;
+
+    // Casco principal del vagón (metálico, con extremos redondeados)
+    const gradCasco = ctx.createLinearGradient(0, bodyTop, 0, bodyBottom);
+    gradCasco.addColorStop(0, `hsl(${hue},40%,46%)`);
+    gradCasco.addColorStop(0.5, `hsl(${hue},34%,30%)`);
+    gradCasco.addColorStop(1, `hsl(${hue},44%,15%)`);
+    ctx.fillStyle = gradCasco;
+    trazarRectRedondeado(sx1, bodyTop, w, bodyH, Math.min(10, w * 0.4));
+    ctx.fill();
+
+    // Franjas de advertencia diagonales cerca de cada extremo (recortadas al casco)
+    ctx.save();
+    trazarRectRedondeado(sx1, bodyTop, w, bodyH, Math.min(10, w * 0.4));
+    ctx.clip();
+    ctx.strokeStyle = 'rgba(255,200,60,0.5)';
+    ctx.lineWidth = 5;
+    [sx1 + 6, sx2 - 6].forEach(cx => {
+      for (let d = -18; d < 26; d += 9) {
+        ctx.beginPath();
+        ctx.moveTo(cx + d, bodyTop - 4);
+        ctx.lineTo(cx + d - bodyH * 0.5, bodyBottom + 4);
+        ctx.stroke();
+      }
+    });
+    ctx.restore();
+
+    // Costillas/paneles verticales del casco
+    ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+    ctx.lineWidth = 2;
+    for (let x = sx1 + 46; x < sx2 - 24; x += 74) {
+      ctx.beginPath();
+      ctx.moveTo(x, bodyTop + 8);
+      ctx.lineTo(x, bodyBottom - 10);
+      ctx.stroke();
+    }
+
+    // Ventanas iluminadas (alternan tono cálido/frío)
+    let vi = 0;
+    for (let x = sx1 + 26; x < sx2 - 46; x += 74, vi++) {
+      const ww = 38, wh = 20, wy = bodyTop + 16;
+      const calido = vi % 2 === 0;
+      const colorLuz = calido ? '255,205,120' : '150,225,255';
+      const gradV = ctx.createLinearGradient(0, wy, 0, wy + wh);
+      gradV.addColorStop(0, `rgba(${colorLuz},0.95)`);
+      gradV.addColorStop(1, `rgba(${colorLuz},0.4)`);
+      ctx.fillStyle = gradV;
+      trazarRectRedondeado(x, wy, ww, wh, 4);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(15,8,25,0.65)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = `rgba(${colorLuz},0.9)`;
+      ctx.fillRect(x + ww * 0.42, wy + 3, 2, wh - 6);
+    }
+
+    // Tira de energía antigravedad bajo el vagón
+    const gradEnergia = ctx.createLinearGradient(0, bodyBottom - 10, 0, bodyBottom);
+    gradEnergia.addColorStop(0, 'rgba(140,220,255,0)');
+    gradEnergia.addColorStop(1, `rgba(140,220,255,${0.55 + 0.25 * Math.sin(tiempoJugado * 3 + p.x1)})`);
+    ctx.fillStyle = gradEnergia;
+    trazarRectRedondeado(sx1 + 6, bodyBottom - 10, w - 12, 8, 4);
+    ctx.fill();
+
+    // Techo (franja superior por donde corre el jugador)
+    const gradTecho = ctx.createLinearGradient(0, p.topY, 0, bodyTop + 4);
+    gradTecho.addColorStop(0, '#f4f7fb');
+    gradTecho.addColorStop(1, `hsl(${hue},22%,68%)`);
+    ctx.fillStyle = gradTecho;
+    trazarRectRedondeado(sx1, p.topY, w, 12, 6);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Remaches del techo
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+    ctx.lineWidth = 1.5;
+    for (let x = sx1 + 16; x < sx2 - 10; x += 30) {
+      ctx.beginPath();
+      ctx.arc(x, p.topY + 6, 2, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Escotilla/respiradero central sobre el techo (detalle decorativo)
+    if (w > 150) {
+      const hx = sx1 + w / 2;
+      ctx.fillStyle = `hsl(${hue},20%,55%)`;
+      trazarRectRedondeado(hx - 16, p.topY - 6, 32, 8, 3);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+      ctx.lineWidth = 1;
+      for (let gx = hx - 11; gx < hx + 12; gx += 6) {
+        ctx.beginPath();
+        ctx.moveTo(gx, p.topY - 5);
+        ctx.lineTo(gx, p.topY - 1);
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+function dibujarMonedas() {
+  for (const m of monedas) {
+    const sx = m.x - cameraX;
+    if (sx < -40 || sx > W + 40) continue;
+    const bob = Math.sin(tiempoJugado * 4 + m.x) * 5;
+    dibujarMonedaProc(sx, m.y + bob, m.tipo, m.fase);
+  }
+}
+
+function dibujarEnemigos() {
+  for (const en of enemigos) {
+    const sx = en.x - cameraX;
+    if (sx < -140 || sx > W + 140) continue;
+    const w = en.def.w, h = en.def.h;
+    const footY = en.y + h / 2;
+    const fase = tiempoJugado + en.x * 0.01;
+    ctx.save();
+    ctx.translate(sx, footY);
+    if (en.dir < 0) ctx.scale(-1, 1);
+    en.def.dibujar(w, h, fase);
+    ctx.restore();
+  }
+}
+
+// Personaje: diseño 100% procedural y animado. El origen (0,0) es el punto
+// donde toca la plataforma (pies); se dibuja hacia arriba (Y negativa).
+// Cosméticos comprables en la tienda: se dibujan sobre el personaje base.
+// La capa va detrás del cuerpo; la gorra y las gafas, sobre la cabeza.
+function dibujarCapa(w, h, t, enAire) {
+  const balanceo = Math.sin(t * 5) * (enAire ? 14 : 8);
+  ctx.save();
+  const grad = ctx.createLinearGradient(0, -h * 0.85, 0, -h * 0.02);
+  grad.addColorStop(0, '#7c5cff');
+  grad.addColorStop(1, '#33206b');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(-w * 0.2, -h * 0.76);
+  ctx.quadraticCurveTo(-w * 0.62 + balanceo * 0.6, -h * 0.42, -w * 0.4 + balanceo, -h * 0.01);
+  ctx.lineTo(-w * 0.1, -h * 0.12);
+  ctx.quadraticCurveTo(-w * 0.22, -h * 0.42, -w * 0.1, -h * 0.72);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function dibujarGorra(headR, headY) {
+  ctx.save();
+  const gradGorra = ctx.createLinearGradient(0, headY - headR * 1.35, 0, headY - headR * 0.5);
+  gradGorra.addColorStop(0, '#ff8a3d');
+  gradGorra.addColorStop(1, '#c85a1a');
+  ctx.fillStyle = gradGorra;
+  ctx.beginPath();
+  ctx.arc(0, headY - headR * 0.12, headR * 1.05, Math.PI * 1.06, Math.PI * 1.94);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.fillStyle = '#c85a1a';
+  ctx.beginPath();
+  ctx.ellipse(headR * 0.58, headY - headR * 0.22, headR * 0.42, headR * 0.16, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffcf9e';
+  ctx.beginPath();
+  ctx.arc(0, headY - headR * 1.3, headR * 0.09, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function dibujarGafas(headR, headY) {
+  ctx.save();
+  ctx.fillStyle = 'rgba(20,20,30,0.88)';
+  ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+  ctx.lineWidth = 1.5;
+  [-1, 1].forEach(lado => {
+    ctx.beginPath();
+    ctx.ellipse(lado * headR * 0.36, headY - headR * 0.02, headR * 0.24, headR * 0.18, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  });
+  ctx.beginPath();
+  ctx.moveTo(-headR * 0.12, headY - headR * 0.02);
+  ctx.lineTo(headR * 0.12, headY - headR * 0.02);
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+  ctx.lineWidth = 1;
+  [-1, 1].forEach(lado => {
+    ctx.beginPath();
+    ctx.ellipse(lado * headR * 0.3, headY - headR * 0.08, headR * 0.08, headR * 0.05, -0.3, 0, Math.PI * 2);
+    ctx.stroke();
+  });
+  ctx.restore();
+}
+
+function dibujarAntena(headR, headY) {
+  ctx.save();
+  ctx.strokeStyle = '#c9d0d8';
+  ctx.lineWidth = Math.max(1.5, headR * 0.08);
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(0, headY - headR * 0.95);
+  ctx.lineTo(headR * 0.18, headY - headR * 1.55);
+  ctx.stroke();
+  ctx.save();
+  ctx.shadowColor = '#ffe27c';
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.arc(headR * 0.18, headY - headR * 1.6, headR * 0.16, 0, Math.PI * 2);
+  ctx.fillStyle = '#ffe27c';
+  ctx.fill();
+  ctx.restore();
+  ctx.restore();
+}
+
+function dibujarBufanda(w, h, t) {
+  const balanceo = Math.sin(t * 5) * 6;
+  ctx.save();
+  const grad = ctx.createLinearGradient(-w * 0.3, -h * 0.62, w * 0.3, -h * 0.5);
+  grad.addColorStop(0, '#ff5c7a');
+  grad.addColorStop(1, '#ffd166');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.ellipse(0, -h * 0.58, w * 0.34, h * 0.09, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(w * 0.22, -h * 0.55);
+  ctx.quadraticCurveTo(w * 0.42 + balanceo * 0.5, -h * 0.3, w * 0.3 + balanceo, -h * 0.05);
+  ctx.lineTo(w * 0.14, -h * 0.1);
+  ctx.quadraticCurveTo(w * 0.28, -h * 0.32, w * 0.12, -h * 0.53);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
+function dibujarCorona(headR, headY) {
+  ctx.save();
+  const gradCorona = ctx.createLinearGradient(0, headY - headR * 1.5, 0, headY - headR * 0.95);
+  gradCorona.addColorStop(0, '#fff3b0');
+  gradCorona.addColorStop(1, '#e0a832');
+  ctx.fillStyle = gradCorona;
+  ctx.beginPath();
+  ctx.moveTo(-headR * 0.55, headY - headR * 0.95);
+  ctx.lineTo(-headR * 0.55, headY - headR * 1.15);
+  ctx.lineTo(-headR * 0.28, headY - headR * 0.98);
+  ctx.lineTo(0, headY - headR * 1.4);
+  ctx.lineTo(headR * 0.28, headY - headR * 0.98);
+  ctx.lineTo(headR * 0.55, headY - headR * 1.15);
+  ctx.lineTo(headR * 0.55, headY - headR * 0.95);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = '#ff5c7a';
+  ctx.beginPath();
+  ctx.arc(0, headY - headR * 1.1, headR * 0.09, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function dibujarPersonaje(w, h, info) {
+  const t = info.t;
+  const enAire = !info.grounded;
+  const cicloPierna = Math.sin(info.faseCarrera);
+  const cicloBrazo = Math.sin(info.faseCarrera + Math.PI);
+  const equip = info.equipados || {};
+
+  // Parpadeo periódico (achatamiento breve de los ojos cada ~3.2s)
+  const cicloParpadeo = t % 3.2;
+  const factorOjo = (cicloParpadeo > 3.02 && cicloParpadeo < 3.16) ? 0.12 : 1;
+
+  // Balanceo de orejas tipo resorte: más marcado en el aire
+  const balanceoOreja = Math.sin(t * 3.2) * (enAire ? 0.12 : 0.07) + (enAire ? -0.32 : 0);
+
+  ctx.save();
+
+  // Sombra de contacto
+  ctx.globalAlpha = enAire ? 0.15 : 0.32;
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.ellipse(0, -h * 0.015, w * 0.34, h * 0.035, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  if (equip.capa) dibujarCapa(w, h, t, enAire);
+
+  // ----- Piernas / botas -----
+  const alturaBota = h * 0.16;
+  const pasoAmp = enAire ? w * 0.02 : w * 0.16;
+  [-1, 1].forEach(lado => {
+    const fase = lado > 0 ? cicloPierna : -cicloPierna;
+    const desplaza = fase * pasoAmp;
+    const levante = enAire ? h * 0.05 : Math.max(0, fase) * h * 0.05;
+    ctx.save();
+    ctx.translate(lado * w * 0.15 + desplaza * 0.4, -levante);
+    const gradBota = ctx.createLinearGradient(0, -alturaBota, 0, 0);
+    gradBota.addColorStop(0, '#8a5b89');
+    gradBota.addColorStop(1, '#3d2049');
+    ctx.fillStyle = gradBota;
+    trazarRectRedondeado(-w * 0.12, -alturaBota, w * 0.24, alturaBota, w * 0.07);
+    ctx.fill();
+    ctx.strokeStyle = '#2a1530';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = '#e9ddd2';
+    ctx.beginPath();
+    ctx.ellipse(0, -1, w * 0.135, h * 0.018, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+
+  // ----- Cuerpo (verde) -----
+  const bodyY = -h * 0.46;
+  const bodyRX = w * 0.4, bodyRY = h * 0.3;
+  const gradBody = ctx.createRadialGradient(-bodyRX * 0.3, bodyY - bodyRY * 0.35, bodyRX * 0.2, 0, bodyY, bodyRX * 1.2);
+  gradBody.addColorStop(0, '#68cf83');
+  gradBody.addColorStop(0.6, '#2f9a52');
+  gradBody.addColorStop(1, '#1b6b38');
+  ctx.beginPath();
+  ctx.ellipse(0, bodyY, bodyRX, bodyRY, 0, 0, Math.PI * 2);
+  ctx.fillStyle = gradBody;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(20,60,30,0.5)';
+  ctx.lineWidth = Math.max(1, w * 0.012);
+  ctx.stroke();
+
+  // ----- Brazos -----
+  function brazo(lado, fase) {
+    const hombroX = lado * bodyRX * 0.82;
+    const hombroY = bodyY - bodyRY * 0.15;
+    const angulo = enAire ? lado * -0.7 : lado * 0.22 + fase * 0.5;
+    const largo = h * 0.32;
+    ctx.save();
+    ctx.translate(hombroX, hombroY);
+    ctx.rotate(angulo);
+    const gradManga = ctx.createLinearGradient(0, 0, 0, largo);
+    gradManga.addColorStop(0, '#fbfbf8');
+    gradManga.addColorStop(1, '#d3d1c8');
+    ctx.fillStyle = gradManga;
+    trazarRectRedondeado(-w * 0.09, 0, w * 0.18, largo * 0.72, w * 0.09);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = '#ef8fc0';
+    ctx.beginPath();
+    ctx.ellipse(0, largo * 0.68, w * 0.11, h * 0.02, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#3778b5';
+    ctx.beginPath();
+    ctx.arc(0, largo * 0.82, w * 0.13, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#204d78';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+  }
+  brazo(-1, cicloBrazo);
+  brazo(1, -cicloBrazo);
+
+  // ----- Collar de pompones rosas -----
+  const collarY = bodyY - bodyRY * 0.92;
+  for (let i = -2; i <= 2; i++) {
+    const px = i * w * 0.15;
+    const bounce = Math.sin(t * 5 + i) * h * 0.006;
+    ctx.beginPath();
+    ctx.arc(px, collarY + Math.abs(i) * h * 0.02 + bounce, w * 0.13, 0, Math.PI * 2);
+    ctx.fillStyle = '#ef7fc5';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(150,30,100,0.3)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  if (equip.bufanda) dibujarBufanda(w, h, t);
+
+  // ----- Cabeza -----
+  const headR = w * 0.46;
+  const headY = -h * 0.86;
+
+  // Orejas azules (detrás de la cabeza, con balanceo)
+  [-1, 1].forEach(lado => {
+    ctx.save();
+    ctx.translate(lado * headR * 0.7, headY - headR * 0.15);
+    ctx.rotate(lado * 0.45 + balanceoOreja * lado);
+    const gradOreja = ctx.createLinearGradient(0, -headR * 0.3, 0, headR * 1.3);
+    gradOreja.addColorStop(0, '#4a8fc4');
+    gradOreja.addColorStop(1, '#1d4a73');
+    ctx.fillStyle = gradOreja;
+    ctx.beginPath();
+    ctx.ellipse(0, headR * 0.5, headR * 0.34, headR * 0.85, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(10,30,50,0.4)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  // Cabeza (blanca, con degradado)
+  const gradCabeza = ctx.createRadialGradient(-headR * 0.3, headY - headR * 0.3, headR * 0.15, 0, headY, headR * 1.1);
+  gradCabeza.addColorStop(0, '#ffffff');
+  gradCabeza.addColorStop(0.7, '#f2f0ec');
+  gradCabeza.addColorStop(1, '#d8d4cc');
+  ctx.beginPath();
+  ctx.arc(0, headY, headR, 0, Math.PI * 2);
+  ctx.fillStyle = gradCabeza;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Brillo
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.beginPath();
+  ctx.ellipse(-headR * 0.4, headY - headR * 0.45, headR * 0.22, headR * 0.13, -0.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Mejillas sonrosadas
+  ctx.fillStyle = 'rgba(255,140,190,0.55)';
+  [-1, 1].forEach(lado => {
+    ctx.beginPath();
+    ctx.ellipse(lado * headR * 0.56, headY + headR * 0.16, headR * 0.22, headR * 0.14, 0, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // Naricita (3 rayitas rosas)
+  ctx.strokeStyle = 'rgba(220,90,150,0.75)';
+  ctx.lineWidth = Math.max(1, headR * 0.045);
+  ctx.lineCap = 'round';
+  [-1, 0, 1].forEach(i => {
+    const x = i * headR * 0.11;
+    ctx.beginPath();
+    ctx.moveTo(x, headY + headR * 0.04);
+    ctx.lineTo(x, headY + headR * 0.17);
+    ctx.stroke();
+  });
+
+  // Ojos felices (se achatan al parpadear)
+  ctx.strokeStyle = '#2a2a2a';
+  ctx.lineWidth = Math.max(1.5, headR * 0.09);
+  ctx.lineCap = 'round';
+  [-1, 1].forEach(lado => {
+    ctx.save();
+    ctx.translate(lado * headR * 0.36, headY - headR * 0.02);
+    ctx.scale(1, factorOjo);
+    ctx.beginPath();
+    ctx.arc(0, headR * 0.1, headR * 0.17, Math.PI * 1.1, Math.PI * 1.9);
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  // Sonrisa
+  ctx.strokeStyle = '#c05a8f';
+  ctx.lineWidth = Math.max(1.5, headR * 0.07);
+  ctx.beginPath();
+  ctx.arc(0, headY + headR * 0.32, headR * 0.28, Math.PI * 0.15, Math.PI * 0.85);
+  ctx.stroke();
+
+  if (equip.gafas) dibujarGafas(headR, headY);
+  if (equip.corona) dibujarCorona(headR, headY);
+  if (equip.gorra) dibujarGorra(headR, headY);
+  if (equip.antena) dibujarAntena(headR, headY);
+
+  ctx.restore();
+}
+
+function dibujarJugador() {
+  const sx = player.worldX - cameraX;
+  const parpadeo = player.invulnTimer > 0 && Math.floor(tiempoJugado * 14) % 2 === 0;
+  if (parpadeo) return;
+  ctx.save();
+  ctx.translate(sx, player.y + PLAYER_H / 2);
+  ctx.scale(2 - player.squash, player.squash);
+  dibujarPersonaje(PLAYER_W, PLAYER_H, {
+    t: tiempoJugado,
+    grounded: player.grounded,
+    faseCarrera: player.worldX * 0.05,
+    equipados: perfil.equipados,
+  });
+  ctx.restore();
+}
+
+function dibujarTextos() {
+  ctx.save();
+  ctx.font = 'bold 20px Segoe UI, sans-serif';
+  ctx.textAlign = 'center';
+  for (const t of textosFlotantes) {
+    const sx = t.x - cameraX;
+    ctx.globalAlpha = clamp(t.vida / 0.8, 0, 1);
+    ctx.fillStyle = '#ffe27c';
+    ctx.fillText(t.texto, sx, t.y);
+  }
+  ctx.restore();
+}
+
+function render() {
+  ctx.save();
+  if (shakeTimer > 0) {
+    ctx.translate((Math.random() - 0.5) * 10 * shakeTimer, (Math.random() - 0.5) * 10 * shakeTimer);
+  }
+  dibujarFondo();
+  // En el menú principal no se muestra el tren/juego en pausa de fondo: sólo
+  // el paisaje alienígena a la deriva, para que no parezca la partida misma.
+  if (estado !== 'menu') {
+    dibujarVagones();
+    dibujarMonedas();
+    dibujarEnemigos();
+    if (player) dibujarJugador();
+  }
+  dibujarTextos();
+  ctx.restore();
+}
+
+// ---------- Bucle principal ----------
+let lastT = performance.now();
+function loop(now) {
+  const dt = Math.min(0.033, (now - lastT) / 1000);
+  lastT = now;
+  update(dt);
+  // Deriva lenta y puramente decorativa del fondo mientras se ve el menú.
+  if (estado === 'menu') {
+    tiempoJugado += dt;
+    cameraX += dt * 22;
+  }
+  render();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// Render inicial (fondo del menú, sin vagones del juego)
+plataformas = []; monedas = []; enemigos = []; textosFlotantes = [];
+render();
+})();
+</script>
+</body>
+</html>
