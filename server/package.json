@@ -4,6 +4,9 @@
   "description": "Backend de Fuga Orbital (Fastify + Drizzle + Postgres)",
   "type": "module",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
